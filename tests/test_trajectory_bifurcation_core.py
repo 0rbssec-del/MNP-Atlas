@@ -174,6 +174,64 @@ def test_patch_test_on_diverged_pair(engine, trajectories):
     assert r.js_clean_vs_recorded < 1e-6
     assert r.js_patched_target > 0
     assert "Raconte" not in r.original_continuation
+    assert r.forced_horizon >= 1
+    assert len(r.recovery_per_step) == r.forced_horizon
+    # Étape 0 exacte et approximation top-k doivent concorder
+    if r.recovery is not None and r.recovery_per_step[0] is not None:
+        assert r.recovery_per_step[0] == pytest.approx(r.recovery, abs=0.05)
+
+
+def _pair_of_kind(engine, trajectories, kind, t_range=range(2, 10)):
+    for t in t_range:
+        for i, src in enumerate(trajectories):
+            for j, tgt in enumerate(trajectories):
+                if (
+                    i != j
+                    and min(len(src.entropy_shannon), len(tgt.entropy_shannon)) > t
+                    and engine.classify_pair(src, tgt, t) == kind
+                ):
+                    return i, j, t
+    pytest.fail(f"aucune paire {kind}")
+
+
+def test_choose_patch_time(engine, trajectories):
+    def count(t):
+        n = len(trajectories)
+        return sum(
+            1
+            for i in range(n)
+            for j in range(i + 1, n)
+            if min(len(trajectories[i].entropy_shannon),
+                   len(trajectories[j].entropy_shannon)) > t
+            and engine.classify_pair(trajectories[i], trajectories[j], t)
+            == "informative"
+        )
+
+    t = engine.choose_patch_time(trajectories, t_min=1, n_pairs=2)
+    assert t is not None and count(t) >= 2
+    assert all(count(u) < 2 for u in range(1, t))
+    assert engine.choose_patch_time(trajectories, 1, n_pairs=10**6) is None
+
+
+def test_forced_identity_patch_has_no_effect(engine, trajectories):
+    i, j, t = _pair_of_kind(engine, trajectories, "informative")
+    layer = engine.layers_to_track[1]
+    own = trajectories[j].hidden_states[layer][t]
+    eff = engine.forced_patch_effect(
+        trajectories[i], trajectories[j], t, layer, vector=own, horizon=6
+    )
+    assert eff["recovery_multistep"] == pytest.approx(0.0, abs=1e-6)
+    if eff["recovery_loglik"] is not None:
+        assert eff["recovery_loglik"] == pytest.approx(0.0, abs=1e-6)
+
+
+def test_forced_positive_control_first_step(engine, trajectories):
+    i, j, t = _pair_of_kind(engine, trajectories, "positive_control", range(1, 10))
+    layer = engine.layers_to_track[1]
+    eff = engine.forced_patch_effect(
+        trajectories[i], trajectories[j], t, layer, horizon=6
+    )
+    assert eff["recovery_per_step"][0] == pytest.approx(1.0, abs=1e-4)
 
 
 def test_controls_in_reversibility_analysis(engine, trajectories):

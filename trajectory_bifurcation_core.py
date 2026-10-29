@@ -1,5 +1,5 @@
 # trajectory_bifurcation_core.py
-# Core v0.1.4 – Trajectory Bifurcation Engine
+# Core v0.1.5 – Trajectory Bifurcation Engine
 # Fonctionnalités :
 #   - Génération d'ensembles de trajectoires à prompt fixe (KV-cache, graines)
 #   - Divergences : Jensen-Shannon (top-k + masse résiduelle) + distances
@@ -16,6 +16,13 @@
 #   - États capturés par hooks sur la sortie brute des couches (avant :
 #     hidden_states[-1] inclut la norme finale → double norme au patch).
 #   - Trajectory.text ne contient plus que la complétion.
+#
+# Changements v0.1.4 → v0.1.5 :
+#   - Le patching n'a plus lieu à t* même (où les paires ne diffèrent souvent
+#     qu'au dernier token, recovery trivial) mais au premier t >= t* offrant
+#     assez de paires informatives (choose_patch_time).
+#   - recovery multi-pas : la continuation de la source est forcée sur
+#     `forced_horizon` tokens, JS exacte par pas et log-vraisemblance récupérée.
 
 from __future__ import annotations
 import contextlib
@@ -87,6 +94,19 @@ class PatchResult:
     # Contrôle numérique : JS entre la passe propre et la distribution
     # enregistrée pendant la génération (doit être ~0)
     js_clean_vs_recorded: Optional[float] = None
+    # Indice du premier token généré qui diffère entre source et cible
+    first_diff_step: Optional[int] = None
+    # Dernier token du préfixe identique ? Sinon, patcher la dernière position
+    # transmet aussi l'identité de ce token, pas seulement le contexte.
+    last_token_same: Optional[bool] = None
+    # Continuation de la source forcée sur forced_horizon tokens, distributions
+    # exactes : 1 - Σ_k JS(patché_k, source_k) / Σ_k JS(cible_k, source_k)
+    recovery_multistep: Optional[float] = None
+    # (LL patché - LL cible) / (LL source - LL cible), LL = log-vraisemblance
+    # de la continuation de la source. Continu, contrairement à recovery.
+    recovery_loglik: Optional[float] = None
+    recovery_per_step: Optional[List[Optional[float]]] = None
+    forced_horizon: int = 0
 
 @dataclass
 class BifurcationResult:
@@ -466,11 +486,15 @@ class TrajectoryBifurcationEngine:
         return max(0.0, 0.5 * (kl(pa, m) + kl(pb, m)))
 
     @staticmethod
-    def classify_pair(src: Trajectory, tgt: Trajectory, t_patch: int) -> str:
+    def first_diff_step(
+        src: Trajectory, tgt: Trajectory, t_patch: int
+    ) -> Optional[int]:
         a, b = src.generated_ids[:t_patch], tgt.generated_ids[:t_patch]
-        first_diff = next(
-            (k for k, (x, y) in enumerate(zip(a, b)) if x != y), None
-        )
+        return next((k for k, (x, y) in enumerate(zip(a, b)) if x != y), None)
+
+    @classmethod
+    def classify_pair(cls, src: Trajectory, tgt: Trajectory, t_patch: int) -> str:
+        first_diff = cls.first_diff_step(src, tgt, t_patch)
         if first_diff is None:
             return "negative_control"
         if first_diff == t_patch - 1:
@@ -659,6 +683,115 @@ class TrajectoryBifurcationEngine:
         )
         return cont.token_ids, cont.text
 
+    @staticmethod
+    def _js_rows(p: torch.Tensor, q: torch.Tensor) -> torch.Tensor:
+        """JS exacte (nats) ligne par ligne entre distributions complètes."""
+        m = 0.5 * (p + q)
+        xlogy = torch.special.xlogy
+        kl_pm = (xlogy(p, p) - xlogy(p, m)).sum(-1)
+        kl_qm = (xlogy(q, q) - xlogy(q, m)).sum(-1)
+        return (0.5 * (kl_pm + kl_qm)).clamp_min(0.0)
+
+    @torch.no_grad()
+    def forced_patch_effect(
+        self,
+        src: Trajectory,
+        tgt: Trajectory,
+        t_patch: int,
+        layer: int,
+        vector: Optional[np.ndarray] = None,
+        horizon: int = 16,
+    ) -> Dict[str, Any]:
+        """Effet du patch le long de la continuation de la source (forçage).
+
+        Trois passes sur préfixe + src.generated_ids[t_patch:t_patch+K] :
+        cible propre, cible patchée (état de la source par défaut, ou `vector`
+        pour un témoin) et source. Distributions exactes sur tout le
+        vocabulaire. À la position patchée, les clés/valeurs des couches
+        <= layer restent celles de la cible : pour k >= 1 l'état est hybride.
+        """
+        if src.prompt_len != tgt.prompt_len:
+            raise ValueError("Source et cible n'ont pas le même prompt")
+        if vector is None:
+            vector = src.hidden_states[layer][t_patch]
+        prefix_end = tgt.prompt_len + t_patch
+        position = prefix_end - 1
+        forced = src.generated_ids[t_patch : t_patch + horizon]
+        k_steps = len(forced)
+        if k_steps == 0:
+            raise ValueError("Aucun token de la source à forcer")
+
+        def log_probs(prefix, patch=None):
+            ids = torch.tensor([prefix + forced], device=self.device)
+            with contextlib.ExitStack() as stack:
+                if patch is not None:
+                    stack.enter_context(self._patch_hook(*patch))
+                logits = self.model(input_ids=ids, use_cache=False).logits
+            return F.log_softmax(
+                logits[0, position : position + k_steps].double(), dim=-1
+            )
+
+        lp_clean = log_probs(tgt.token_ids[:prefix_end])
+        lp_patch = log_probs(
+            tgt.token_ids[:prefix_end],
+            (layer, position, torch.from_numpy(np.asarray(vector))),
+        )
+        lp_src = log_probs(src.token_ids[:prefix_end])
+
+        js_cs = self._js_rows(lp_clean.exp(), lp_src.exp())
+        js_ps = self._js_rows(lp_patch.exp(), lp_src.exp())
+        per_step = [
+            float(1.0 - b / a) if a > 1e-6 else None
+            for a, b in zip(js_cs.tolist(), js_ps.tolist())
+        ]
+
+        tok = torch.tensor(forced, device=lp_src.device).unsqueeze(1)
+        ll_clean = float(lp_clean.gather(1, tok).sum())
+        ll_patch = float(lp_patch.gather(1, tok).sum())
+        ll_src = float(lp_src.gather(1, tok).sum())
+
+        den_js = float(js_cs.sum())
+        den_ll = ll_src - ll_clean
+        return {
+            "horizon": k_steps,
+            "recovery_per_step": per_step,
+            "recovery_multistep": (
+                1.0 - float(js_ps.sum()) / den_js if den_js > 1e-4 else None
+            ),
+            "recovery_loglik": (
+                (ll_patch - ll_clean) / den_ll if abs(den_ll) > 1e-3 else None
+            ),
+            "js_clean_source": js_cs.tolist(),
+            "js_patched_source": js_ps.tolist(),
+            "ll": {"clean": ll_clean, "patched": ll_patch, "source": ll_src},
+        }
+
+    def choose_patch_time(
+        self,
+        trajectories: List[Trajectory],
+        t_min: int,
+        n_pairs: int,
+    ) -> Optional[int]:
+        """Premier t >= t_min offrant au moins n_pairs paires informatives.
+
+        À t* même, les paires ne diffèrent souvent qu'au dernier token
+        (témoins positifs) : patcher là ne teste rien.
+        """
+        n = len(trajectories)
+        lengths = [len(t.entropy_shannon) for t in trajectories]
+        for t in range(max(1, t_min), max(lengths)):
+            count = sum(
+                1
+                for i in range(n)
+                for j in range(i + 1, n)
+                if min(lengths[i], lengths[j]) > t
+                and self.classify_pair(trajectories[i], trajectories[j], t)
+                == "informative"
+            )
+            if count >= n_pairs:
+                return t
+        return None
+
     def activation_patch_test(
         self,
         trajectories: List[Trajectory],
@@ -669,6 +802,7 @@ class TrajectoryBifurcationEngine:
         max_continuation_tokens: int = 32,
         seed: Optional[int] = None,
         overlap_threshold: float = 0.55,
+        forced_horizon: int = 16,
     ) -> PatchResult:
         src = trajectories[source_idx]
         tgt = trajectories[target_idx]
@@ -734,6 +868,11 @@ class TrajectoryBifurcationEngine:
         )
         recovery = 1.0 - js_ps / js_ts if js_ts > 1e-6 else None
         pair_kind = self.classify_pair(src, tgt, t_patch)
+        forced = (
+            self.forced_patch_effect(src, tgt, t_patch, layer, horizon=forced_horizon)
+            if forced_horizon > 0
+            else {}
+        )
 
         return PatchResult(
             source_traj_idx=source_idx,
@@ -755,6 +894,16 @@ class TrajectoryBifurcationEngine:
             js_clean_vs_recorded=self.js_divergence_topk(
                 clean.first_distribution, tgt.topk_distributions[t_patch]
             ),
+            first_diff_step=self.first_diff_step(src, tgt, t_patch),
+            last_token_same=(
+                src.generated_ids[t_patch - 1] == tgt.generated_ids[t_patch - 1]
+                if t_patch >= 1
+                else None
+            ),
+            recovery_multistep=forced.get("recovery_multistep"),
+            recovery_loglik=forced.get("recovery_loglik"),
+            recovery_per_step=forced.get("recovery_per_step"),
+            forced_horizon=forced.get("horizon", 0),
         )
 
     def reversibility_analysis(
@@ -766,6 +915,7 @@ class TrajectoryBifurcationEngine:
         n_controls: int = 1,
         max_continuation_tokens: int = 32,
         seed: Optional[int] = None,
+        forced_horizon: int = 16,
     ) -> List[PatchResult]:
         """Patch source → cible sur des paires tirées au hasard.
 
@@ -814,6 +964,7 @@ class TrajectoryBifurcationEngine:
                         t_patch=t_patch,
                         layer=layer,
                         max_continuation_tokens=max_continuation_tokens,
+                        forced_horizon=forced_horizon,
                     )
                 )
             except (ValueError, RuntimeError) as e:
@@ -840,6 +991,10 @@ class TrajectoryBifurcationEngine:
             "patch_success_rate": mean([r.success for r in info]),
             "patch_mean_overlap": mean([r.final_token_overlap for r in info]),
             "patch_mean_recovery": mean([r.recovery for r in info]),
+            "patch_mean_recovery_multistep": mean(
+                [r.recovery_multistep for r in info]
+            ),
+            "patch_mean_recovery_loglik": mean([r.recovery_loglik for r in info]),
             # Attendu ~1 (contexte identique sauf la position patchée)
             "positive_control_mean_recovery": mean([r.recovery for r in pos]),
             # Attendu = 1 (patch nul, même graine → continuations identiques)
@@ -861,6 +1016,8 @@ class TrajectoryBifurcationEngine:
         run_patching: bool = True,
         n_patch_pairs: int = 4,
         chat_template_kwargs: Optional[Dict[str, Any]] = None,
+        forced_horizon: int = 16,
+        require_bifurcation: bool = True,
     ) -> BifurcationResult:
         print(f"\n[Core] Analyse : {prompt[:90]}...")
 
@@ -880,19 +1037,30 @@ class TrajectoryBifurcationEngine:
         if t_star is None:
             t_star = bif_res.get("t_star")
 
-        if run_patching and t_star is not None:
-            print(
-                f"[Core] Bifurcation détectée à t={t_star} → test de réversibilité"
-            )
-            patch_results = self.reversibility_analysis(
-                trajectories=trajectories,
-                t_patch=t_star,
+        t_patch = None
+        if run_patching and (t_star is not None or not require_bifurcation):
+            t_patch = self.choose_patch_time(
+                trajectories,
+                t_min=t_star if t_star is not None else 1,
                 n_pairs=n_patch_pairs,
             )
+            if t_patch is None:
+                print("[Core] Aucun t avec assez de paires informatives")
+            else:
+                print(
+                    f"[Core] t*={t_star} → test de réversibilité à t={t_patch}"
+                )
+                patch_results = self.reversibility_analysis(
+                    trajectories=trajectories,
+                    t_patch=t_patch,
+                    n_pairs=n_patch_pairs,
+                    forced_horizon=forced_horizon,
+                )
 
         summary = {
             "min_len": div["min_len"],
             "t_star_used": t_star,
+            "t_patch_used": t_patch,
             "bifurcation_js": bif_js,
             "bifurcation_residual": bif_res,
             "mean_entropy": float(np.mean(div["entropy_mean"])),
@@ -931,6 +1099,11 @@ if __name__ == "__main__":
         action="store_true",
         help="Qwen3 : enable_thinking=False dans le chat template",
     )
+    parser.add_argument(
+        "--patch-without-bifurcation",
+        action="store_true",
+        help="Patcher même si aucune bifurcation n'est détectée (t >= 1)",
+    )
     args = parser.parse_args()
 
     engine = TrajectoryBifurcationEngine(
@@ -945,13 +1118,16 @@ if __name__ == "__main__":
         chat_template_kwargs=(
             {"enable_thinking": False} if args.no_thinking else None
         ),
+        require_bifurcation=not args.patch_without_bifurcation,
     )
     print(json.dumps(result.summary, indent=2, ensure_ascii=False, default=str))
     for r in result.patch_results:
         kind = r.pair_kind
-        rec = "n/a" if r.recovery is None else f"{r.recovery:+.2f}"
+        fmt = lambda v: "n/a" if v is None else f"{v:+.2f}"
         print(
             f"[{kind}] {r.source_traj_idx}→{r.target_traj_idx} "
-            f"recovery={rec} overlap={r.final_token_overlap:.2f} "
-            f"1re divergence={r.first_divergence_step}"
+            f"recovery={fmt(r.recovery)} "
+            f"multi-pas={fmt(r.recovery_multistep)} "
+            f"loglik={fmt(r.recovery_loglik)} "
+            f"overlap={r.final_token_overlap:.2f}"
         )
