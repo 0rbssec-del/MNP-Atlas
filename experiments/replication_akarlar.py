@@ -7,7 +7,10 @@
 # T = 0.7 sans top-p, 15 tokens au plus, arrêt sur EOS ou deux retours à la
 # ligne dans les 3 derniers tokens, leurs 8 prompts « les plus équilibrés »,
 # leur classifieur par sous-chaînes. Différences assumées : transformers au lieu
-# de TransformerLens, float32 sur CPU au lieu de float16 sur MPS.
+# de TransformerLens ; bfloat16 sur CPU (AMX) au lieu de float16 sur MPS pour
+# les phases échantillonnées ; P1 en float32, pour tester une égalité exacte.
+# (Changement de dtype décidé après le test rapide, pour la vitesse, avant tout
+# résultat sur P1, P1b ou P2.)
 #
 # Critères fixés avant exécution :
 #   P1  Leur implémentation (patch non persistant, cible = nouveau tirage) au
@@ -128,6 +131,7 @@ class Replication:
         self.args = args
         self.engine = TrajectoryBifurcationEngine(
             model_name=args.model,
+            torch_dtype=getattr(torch, args.dtype),
             layers_to_track=None,
             max_new_tokens=MAX_GEN,
             temperature=TEMPERATURE,
@@ -141,7 +145,7 @@ class Replication:
         self.prompts = json.loads(Path(args.prompts).read_text())
         self.results = {"setup": {
             "model": args.model, "temperature": TEMPERATURE,
-            "max_gen": MAX_GEN, "layer_sweep": LAYER_SWEEP,
+            "max_gen": MAX_GEN, "layer_sweep": LAYER_SWEEP, "dtype": args.dtype,
             "torch": torch.__version__,
         }}
 
@@ -236,7 +240,19 @@ class Replication:
             runs = []
             for i in range(self.args.n_pool):
                 tr = self.natural(ids, 20_000 + 100 * pi + i)
-                runs.append((tr, self.label(tr.text, p)))
+                runs.append((tr, dict(self.label(tr.text, p), fill=False)))
+            # Comme leur code : tirer jusqu'à 3 runs par classe (100 essais
+            # au plus) ; ces tirages supplémentaires sont exclus des taux de base
+            attempt = len(runs)
+            while attempt < 100 and min(
+                sum(r[1]["label"] == c for r in runs)
+                for c in ("CORRECT", "HALLUCINATION")
+            ) < 3:
+                tr = self.natural(ids, 20_000 + 100 * pi + attempt)
+                lab = self.label(tr.text, p)
+                attempt += 1
+                if sum(r[1]["label"] == lab["label"] for r in runs) < 3 and lab["label"] != "OTHER":
+                    runs.append((tr, dict(lab, fill=True)))
             pools[p["idx"]] = runs
             print(f"[pool] {p['idx']:2d} découverte {counts} | 15 tokens : "
                   f"{[sum(r[1]['label'] == c for r in runs) for c in ('CORRECT', 'HALLUCINATION', 'OTHER')]}"
@@ -255,28 +271,35 @@ class Replication:
         return c, h
 
     @torch.no_grad()
-    def phase_p1(self):
-        """Leur patch au pas 1 sur un nouveau tirage : distribution du pas 1."""
+    def phase_p1(self, pool):
+        """Leur patch au pas 1 sur un nouveau tirage : distribution du pas 1.
+
+        N'utilise que les tokens t0 du pool : les états de la source au pas 1
+        sont recalculés dans le dtype courant (float32 pour un test exact).
+        """
         rows = []
+        layers = list(range(self.n_layers))
         for pi, p in enumerate(self.prompts):
             ids = self.prompt_ids(p["prompt"])
-            c, h = self.sources(p["idx"])
+            runs = pool.get(str(p["idx"]), [])
+            c = [r for r in runs if r["label"] == "CORRECT"]
+            h = [r for r in runs if r["label"] == "HALLUCINATION"]
             if not c or not h:
                 continue
-            others = [r[0] for r in self.pools[p["idx"]]]
             for name, src in (("H->C", c[0]), ("C->H", h[0])):
-                if len(src.generated_ids) < 2:
-                    continue
-                src_ids = torch.tensor([src.token_ids[: src.prompt_len + 1]])
-                p_src = F.softmax(self.model(input_ids=src_ids).logits[0, -1].double(), -1)
-                fresh = [o.generated_ids[0] for o in others
-                         if o.generated_ids[0] != src.generated_ids[0]][:3]
+                src_ids = torch.cat([ids, torch.tensor([[src["t0"]]])], 1)
+                with self.engine._capture_hooks(layers) as cap:
+                    lg = self.model(input_ids=src_ids, use_cache=False).logits
+                p_src = F.softmax(lg[0, -1].double(), -1)
+                states = {l: cap[l].clone() for l in layers}
+                fresh = list(dict.fromkeys(
+                    r["t0"] for r in runs if r["t0"] != src["t0"]))[:3]
                 for t0 in fresh:
                     tgt_ids = torch.cat([ids, torch.tensor([[t0]])], 1)
                     p_tgt = F.softmax(self.model(input_ids=tgt_ids).logits[0, -1].double(), -1)
                     before = float(self.engine._js_rows(p_tgt[None], p_src[None])[0])
-                    for layer in range(self.n_layers):
-                        vec = torch.from_numpy(src.hidden_states[layer][1])
+                    for layer in layers:
+                        vec = states[layer]
                         with self.engine._patch_hook(layer, tgt_ids.shape[1] - 1, vec):
                             lg = self.model(input_ids=tgt_ids, use_cache=False).logits
                         p_pat = F.softmax(lg[0, -1].double(), -1)
@@ -412,7 +435,7 @@ def report(res):
     if ours_c:
         say(f"  taux correct moyen : nous {np.mean(ours_c):.2f}, eux {np.mean(theirs_c):.2f} ; Spearman {spearman(ours_c, theirs_c):+.2f}")
 
-    pool = [r for v in res.get("pool", {}).values() for r in v]
+    pool = [r for v in res.get("pool", {}).values() for r in v if not r.get("fill")]
     if pool:
         n = len(pool)
         for key in ("label", "label_strict"):
@@ -445,7 +468,8 @@ def report(res):
             chi2, pv = chi2_homogeneity(ks, ns)
             K, N = sum(ks), sum(ns)
             say(f"  {d} : par couche {[f'{k}/{n}' for k, n in zip(ks, ns)]} ; global {K}/{N} = {K / max(N, 1):.2f} {wilson(K, N)} ; χ² p = {pv}")
-            say(f"     VERDICT P1b {d} : {'CONFIRMÉ' if pv is not None and pv > 0.05 else 'NON CONFIRMÉ'}")
+            verdict = "INDÉTERMINÉ (aucune variation)" if pv is None else ("CONFIRMÉ" if pv > 0.05 else "NON CONFIRMÉ")
+            say(f"     VERDICT P1b {d} : {verdict}")
 
     det = res.get("p2_deterministic", [])
     if det:
@@ -491,7 +515,10 @@ def main():
     ap.add_argument("--trials", type=int, default=3)
     ap.add_argument("--n-pairs", type=int, default=3)
     ap.add_argument("--seed", type=int, default=0)
-    ap.add_argument("--phases", default="pool,p1,p1b,p2")
+    ap.add_argument("--phases", default="pool,p1b,p2")
+    ap.add_argument("--dtype", default="bfloat16", choices=["bfloat16", "float32"])
+    ap.add_argument("--pool-from", default=None,
+                    help="JSON d'un run précédent (pour P1 seul, en float32)")
     ap.add_argument("--max-prompts", type=int, default=None)
     ap.add_argument("--out", default="replication_akarlar.json")
     args = ap.parse_args()
@@ -501,7 +528,11 @@ def main():
     if args.max_prompts:
         rep.prompts = rep.prompts[: args.max_prompts]
     phases = args.phases.split(",")
-    for name, fn in (("pool", rep.phase_fidelity_and_pool), ("p1", rep.phase_p1),
+    if args.pool_from:
+        prev = json.loads(Path(args.pool_from).read_text())
+        rep.results.update({k: v for k, v in prev.items() if k != "setup"})
+    for name, fn in (("pool", rep.phase_fidelity_and_pool),
+                     ("p1", lambda: rep.phase_p1(rep.results["pool"])),
                      ("p1b", rep.phase_p1b), ("p2", rep.phase_p2)):
         if name in phases:
             t0 = time.time()

@@ -843,7 +843,8 @@ class TrajectoryBifurcationEngine:
         orig_set = set(clean.text.split())
         patch_set = set(patched.text.split())
         union = orig_set | patch_set
-        overlap = len(orig_set & patch_set) / max(1, len(union))
+        # Deux continuations vides (EOS immédiat) sont identiques
+        overlap = len(orig_set & patch_set) / len(union) if union else 1.0
 
         first_div = next(
             (
