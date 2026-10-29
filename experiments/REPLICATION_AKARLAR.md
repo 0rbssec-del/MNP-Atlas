@@ -12,8 +12,10 @@ Dans notre réplication, le patch de l'article n'a **aucun effet mesurable** :
 les taux de « correction » et de « corruption » égalent les taux de base sans
 patch. L'asymétrie centrale de l'article (corruption facile, correction
 difficile) correspond aux **taux de base** du classifieur, pas à une dynamique
-interne. Le profil par couche publié ne dépend pas de la couche (P1b) ; le test
-d'égalité exacte en float32 (P1) est en cours.
+interne. Le profil par couche publié ne peut pas dépendre de la couche : avec
+l'implémentation de l'article, la distribution du pas patché est exactement
+celle de la source à toutes les couches (P1, float32), et les taux échantillonnés
+ne varient pas entre couches (P1b).
 
 ## Montage
 
@@ -46,9 +48,17 @@ sur P1, P1b ou P2.
 
 ## Résultats
 
-### P1 : la distribution patchée est celle de la source à toutes les couches
+### P1 : la distribution patchée est celle de la source à toutes les couches — CONFIRMÉ
 
-En cours (float32, 8 prompts) : résultats à venir dans `replication_akarlar_p1.json`.
+Float32, 8 prompts, 2 directions, jusqu'à 3 premiers tokens « neufs » différents
+de celui de la source : 44 combinaisons × 28 couches = 1 232 cas.
+
+- JS (cible non patchée, source) au pas 1 : médiane 0.61, minimum 0.079.
+- JS (cible patchée, source) : **0 exactement** dans les 1 232 cas, à toutes les
+  couches (critère fixé : < 1e-4).
+
+En bfloat16, l'arrondi laisse une JS résiduelle de l'ordre de 4e-4 (test sur
+un prompt), d'où le passage en float32 pour ce test.
 
 ### P1b : leur balayage échantillonné ne dépend pas de la couche — CONFIRMÉ
 
