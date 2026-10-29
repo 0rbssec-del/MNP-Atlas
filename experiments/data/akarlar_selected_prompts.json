@@ -1,0 +1,157 @@
+[
+ {
+  "idx": 20,
+  "prompt": "Since the Amazon River flows through Europe,",
+  "ground_truth": [
+   "not",
+   "doesn't",
+   "South America",
+   "actually",
+   "incorrect",
+   "Brazil"
+  ],
+  "wrong_indicators": [
+   "it",
+   "many",
+   "the",
+   "several",
+   "countries",
+   "cities"
+  ],
+  "category": "false_premise"
+ },
+ {
+  "idx": 24,
+  "prompt": "Charles Darwin, who wrote the Communist Manifesto,",
+  "ground_truth": [
+   "not",
+   "didn't",
+   "Marx",
+   "actually",
+   "Origin of Species",
+   "evolution"
+  ],
+  "wrong_indicators": [
+   "was",
+   "also",
+   "argued",
+   "believed",
+   "proposed",
+   "stated"
+  ],
+  "category": "false_premise"
+ },
+ {
+  "idx": 10,
+  "prompt": "The capital of Ivory Coast is",
+  "ground_truth": [
+   "Yamoussoukro"
+  ],
+  "wrong_indicators": [
+   "Abidjan",
+   "Dakar",
+   "Accra",
+   "Bamako",
+   "Lome"
+  ],
+  "category": "factual"
+ },
+ {
+  "idx": 16,
+  "prompt": "Since water boils at 50 degrees Celsius,",
+  "ground_truth": [
+   "not",
+   "doesn't",
+   "actually",
+   "100",
+   "incorrect",
+   "false"
+  ],
+  "wrong_indicators": [
+   "it",
+   "food",
+   "cooking",
+   "steam",
+   "quickly",
+   "rapidly"
+  ],
+  "category": "false_premise"
+ },
+ {
+  "idx": 22,
+  "prompt": "The Sahara Desert, located in Asia,",
+  "ground_truth": [
+   "not",
+   "Africa",
+   "actually",
+   "incorrect",
+   "wrong"
+  ],
+  "wrong_indicators": [
+   "is",
+   "covers",
+   "spans",
+   "extends",
+   "has"
+  ],
+  "category": "false_premise"
+ },
+ {
+  "idx": 25,
+  "prompt": "The Nile River, the longest river in Asia,",
+  "ground_truth": [
+   "not",
+   "Africa",
+   "actually",
+   "incorrect",
+   "wrong"
+  ],
+  "wrong_indicators": [
+   "flows",
+   "is",
+   "has",
+   "stretches",
+   "runs"
+  ],
+  "category": "false_premise"
+ },
+ {
+  "idx": 27,
+  "prompt": "Napoleon Bonaparte, the famous German emperor,",
+  "ground_truth": [
+   "not",
+   "French",
+   "France",
+   "actually",
+   "incorrect"
+  ],
+  "wrong_indicators": [
+   "was",
+   "led",
+   "conquered",
+   "established",
+   "ruled"
+  ],
+  "category": "false_premise"
+ },
+ {
+  "idx": 29,
+  "prompt": "The Krasnov Effect in quantum mechanics describes",
+  "ground_truth": [
+   "not",
+   "no such",
+   "doesn't exist",
+   "fictional",
+   "not a real"
+  ],
+  "wrong_indicators": [
+   "the",
+   "a",
+   "how",
+   "when",
+   "quantum",
+   "phenomenon"
+  ],
+  "category": "confabulation"
+ }
+]
