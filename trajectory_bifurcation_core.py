@@ -1,42 +1,58 @@
 # trajectory_bifurcation_core.py
-# Core v0.1.5 – Trajectory Bifurcation Engine
+# Core v0.2.0 – Trajectory Bifurcation Engine
 # Fonctionnalités :
-#   - Génération d'ensembles de trajectoires à prompt fixe (KV-cache, graines)
+#   - Génération d'ensembles de trajectoires à prompt fixe, par lots (remplissage
+#     à gauche, KV-cache), avec deux échantillonneurs :
+#       « gumbel » (défaut) : bruit de Gumbel à graine explicite par ligne et par
+#         position (nombres aléatoires communs, protocole SGZ A1c–B2) ;
+#       « multinomial » : échantillonneur de v0.1.x (torch.multinomial + graine).
+#   - Entropies de Shannon et de Tsallis (q = 1,45) de la loi du modèle (T = 1).
 #   - Divergences : Jensen-Shannon (top-k + masse résiduelle) + distances
-#     résiduelles (L2 et cosinus)
-#   - Détection de bifurcation (seuil relatif + plancher absolu)
-#   - Test de réversibilité par activation patching (hooks), échantillonnage
-#     couplé et métrique déterministe au niveau des logits
+#     résiduelles (L2 et cosinus) ; part des paires au même préfixe.
+#   - Régimes (test de B2) : bimodalité par moitiés indépendantes (2-moyennes sur
+#     A, test du dip sur B), calibration par substitut gaussien, puissance par
+#     mélanges de prompts, Benjamini-Hochberg.
+#   - Bifurcation par préfixe (B2) : premier k où le préfixe prédit le régime.
+#   - Valeur ajoutée sur les jetons : l'état caché à t prédit-il l'issue mieux
+#     qu'un lecteur de jetons du même préfixe ? (AUC hors échantillon).
+#   - Choc (protocole A1) : jeton de rang imposé à t0, témoin et choc couplés.
+#   - Test de réversibilité par activation patching (hooks), paires classées en
+#     témoins (négatif, positif), « contexte » (dernier jeton identique) et
+#     « jeton » (dernier jeton différent).
 #
-# Changements v0.1.3 → v0.1.4 (voir le message de commit pour le détail) :
-#   - Le patch persiste dans le KV-cache (avant : actif sur la 1re passe
-#     seulement, donc effet limité au 1er token).
-#   - Continuations comparées sur les nouveaux tokens seulement, avec la même
-#     graine pour la version propre et la version patchée.
-#   - États capturés par hooks sur la sortie brute des couches (avant :
-#     hidden_states[-1] inclut la norme finale → double norme au patch).
-#   - Trajectory.text ne contient plus que la complétion.
-#
-# Changements v0.1.4 → v0.1.5 :
-#   - Le patching n'a plus lieu à t* même (où les paires ne diffèrent souvent
-#     qu'au dernier token, recovery trivial) mais au premier t >= t* offrant
-#     assez de paires informatives (choose_patch_time).
-#   - recovery multi-pas : la continuation de la source est forcée sur
-#     `forced_horizon` tokens, JS exacte par pas et log-vraisemblance récupérée.
+# Changements v0.1.5 → v0.2.0 :
+#   - Échantillonneur « gumbel » par défaut, identique à celui des notebooks SGZ
+#     (même graine → mêmes jetons ; les témoins négatifs ne dépendent plus d'un
+#     arrondi dans torch.multinomial). « multinomial » reste disponible.
+#   - Défauts alignés sur le protocole SGZ : T = 0,6, pas de top-p, prompt brut
+#     pour les modèles de base (gabarit de chat seulement s'il est demandé ou si
+#     le modèle n'est pas « -Base »), fp16 sur GPU sans bf16 natif (T4).
+#   - Génération par lots (generer_ensemble), états cachés capturés par lot.
+#   - Paires « informative » scindées en « contexte » / « jeton » : le recovery
+#     des paires « jeton » mesure surtout l'identité du dernier jeton.
+#   - Recovery : None si le dénominateur est trop petit (instabilité, témoin nul
+#     à |recovery| > 100 dans v0.1.5).
+#   - Corrélation JS / divergence des jetons rapportée (critère C1 de v0.1.5) :
+#     une « bifurcation » JS n'est pas, à elle seule, une dynamique interne.
 
 from __future__ import annotations
+
 import contextlib
+import math
+import zlib
+from dataclasses import dataclass, field
+from typing import Any, Callable, Dict, Iterator, List, Optional, Sequence, Tuple
+
+import numpy as np
 import torch
 import torch.nn.functional as F
 import transformers
 from packaging.version import Version
 from transformers import AutoModelForCausalLM, AutoTokenizer
-from dataclasses import dataclass, field
-from typing import List, Dict, Optional, Tuple, Any, Iterator
-import numpy as np
 from tqdm import tqdm
 
 TopK = Tuple[np.ndarray, np.ndarray, float]
+PAS_GRAINE = 100003                      # graine(ligne, pas) = base + 100003·ligne + pas (SGZ)
 
 # --------------------------------------------------------------------------
 # Structures de données
@@ -50,10 +66,12 @@ class Trajectory:
     prompt_len: int = 0
     seed: Optional[int] = None
     entropy_shannon: List[float] = field(default_factory=list)
-    # Sortie brute de la couche l (avant norme finale), dernière position
+    # Sortie brute de la couche l (avant norme finale), dernière position :
+    # hidden_states[l][t] = état qui produit la loi du jeton généré t
     hidden_states: Dict[int, List[np.ndarray]] = field(default_factory=dict)
     # (top_indices, top_probs, remaining_mass)
     topk_distributions: List[TopK] = field(default_factory=list)
+    entropy_tsallis: List[float] = field(default_factory=list)
 
     @property
     def generated_ids(self) -> List[int]:
@@ -64,6 +82,41 @@ class Continuation:
     token_ids: List[int]
     text: str
     first_distribution: TopK
+
+@dataclass
+class Ensemble:
+    """Ensemble de trajectoires générées par lots (longueur fixe).
+
+    tokens[i, k] : jeton généré k de la ligne i ; entropies[i, k] : loi de ce
+    jeton (T = 1) ; hidden_steps[l][i, k] : état de la couche l à la dernière
+    position quand la loi du jeton k est calculée (lecture du jeton k − 1, ou du
+    dernier jeton du prompt pour k = 0) ; hidden_mean[l][i] : moyenne des états
+    après lecture des jetons générés 0 … T − 1 (représentation R_h de B2).
+    """
+    prompt_ids: List[List[int]]
+    prompt_of: np.ndarray
+    row_ids: np.ndarray
+    tokens: np.ndarray
+    entropy_shannon: np.ndarray
+    entropy_tsallis: np.ndarray
+    hidden_steps: Dict[int, np.ndarray] = field(default_factory=dict)
+    hidden_mean: Dict[int, np.ndarray] = field(default_factory=dict)
+    topk: Optional[List[List[TopK]]] = None
+    # Pas dont les états sont gardés dans hidden_steps (None = tous)
+    kept_steps: Optional[List[int]] = None
+    # Longueur jusqu'à la première fin de texte incluse (= T si les jetons spéciaux sont interdits)
+    lengths: Optional[np.ndarray] = None
+    seed_base: int = 0
+    step0: int = 0
+    temperature: float = 0.6
+    q: float = 1.45
+
+    def lignes_du_prompt(self, p: int) -> np.ndarray:
+        return np.nonzero(self.prompt_of == p)[0]
+
+    def textes(self, tokenizer, lignes=None) -> List[str]:
+        lignes = range(len(self.tokens)) if lignes is None else lignes
+        return [tokenizer.decode(self.tokens[i].tolist(), skip_special_tokens=True) for i in lignes]
 
 @dataclass
 class PatchResult:
@@ -107,6 +160,10 @@ class PatchResult:
     recovery_loglik: Optional[float] = None
     recovery_per_step: Optional[List[Optional[float]]] = None
     forced_horizon: int = 0
+    # v0.2 : "negative_control", "positive_control", "informative_context"
+    # (dernier jeton identique, contexte antérieur différent) ou
+    # "informative_token" (dernier jeton différent aussi)
+    pair_detail: str = "informative_token"
 
 @dataclass
 class BifurcationResult:
@@ -121,6 +178,243 @@ class BifurcationResult:
     frac_pairs_same_prefix: Optional[np.ndarray] = None
 
 # --------------------------------------------------------------------------
+# Mesures (communes aux notebooks SGZ)
+# --------------------------------------------------------------------------
+
+@torch.no_grad()
+def entropies_from_logits(logits: torch.Tensor, qs: Sequence[float]) -> Dict[float, torch.Tensor]:
+    """Entropies du softmax complet (float64). q = 1 : Shannon (nats) ; sinon Tsallis S_q = (1 − Σ p^q)/(q − 1)."""
+    logp = torch.log_softmax(logits.double(), dim=-1)
+    p = logp.exp()
+    out = {}
+    for q in qs:
+        if q == 1.0:
+            out[q] = -(p * torch.where(p > 0, logp, torch.zeros_like(logp))).sum(-1)
+        else:
+            out[q] = (1.0 - (p ** q).sum(-1)) / (q - 1.0)
+    return out
+
+
+def gumbel_noise(V: int, seeds: Sequence[int], device) -> torch.Tensor:
+    """Bruit de Gumbel par ligne, graine explicite par ligne (identique aux notebooks SGZ)."""
+    g = torch.Generator(device=device)
+    rows = []
+    for s in seeds:
+        g.manual_seed(int(s))
+        rows.append(torch.rand(V, generator=g, device=device, dtype=torch.float32))
+    u = torch.stack(rows).clamp_(1e-10, 1 - 1e-7)
+    return -torch.log(-torch.log(u))
+
+
+def ci(v) -> Tuple[float, float]:
+    v = np.asarray(v, dtype=float)
+    v = v[np.isfinite(v)]
+    return (float(np.percentile(v, 2.5)), float(np.percentile(v, 97.5))) if v.size else (float("nan"), float("nan"))
+
+# --------------------------------------------------------------------------
+# Régimes, bifurcations par préfixe, valeur ajoutée (fonctions pures, CPU)
+# --------------------------------------------------------------------------
+
+def standardiser(X: np.ndarray, ref: np.ndarray) -> np.ndarray:
+    mu, sd = ref.mean(0), ref.std(0)
+    sd = sd + 1e-6 * sd.max() + 1e-12
+    return (X - mu) / sd
+
+
+def acp(Z: np.ndarray, k: int) -> np.ndarray:
+    _, _, Vt = np.linalg.svd(Z - Z.mean(0), full_matrices=False)
+    return Vt[:min(k, Vt.shape[0])].T
+
+
+def test_bimodal(X: np.ndarray, seed: int, npc: int = 10) -> Tuple[float, float]:
+    """Moitiés indépendantes (B2) : direction des 2-moyennes ajustée sur A (standardisation, ACP à npc composantes), test du
+    dip de Hartigan sur la projection de B. Renvoie (dip, p)."""
+    import diptest
+    from sklearn.cluster import KMeans
+    rng = np.random.default_rng(seed)
+    perm = rng.permutation(len(X))
+    A, B = X[perm[:len(X) // 2]], X[perm[len(X) // 2:]]
+    Az, Bz = standardiser(A, A), standardiser(B, A)
+    V = acp(Az, npc)
+    PA, PB = Az @ V, Bz @ V
+    if np.ptp(PA, axis=0).max() < 1e-9:
+        return 0.0, 1.0
+    km = KMeans(2, n_init=10, random_state=int(seed % 2 ** 31)).fit(PA)
+    u = km.cluster_centers_[0] - km.cluster_centers_[1]
+    u = u / (np.linalg.norm(u) + 1e-12)
+    proj = PB @ u
+    if np.ptp(proj) < 1e-9:
+        return 0.0, 1.0
+    d, p = diptest.diptest(proj.astype(np.float64))
+    return float(d), float(p)
+
+
+def substitut_gaussien(X: np.ndarray, rng) -> np.ndarray:
+    """Même moyenne et même covariance empirique que X, loi gaussienne (unimodale)."""
+    Xc = X - X.mean(0)
+    return X.mean(0) + rng.standard_normal((len(X), len(X))) @ Xc / np.sqrt(len(X) - 1)
+
+
+def bh(p, alpha: float = 0.05) -> np.ndarray:
+    p = np.asarray(p, float)
+    n = len(p)
+    o = np.argsort(p)
+    ok = p[o] <= alpha * np.arange(1, n + 1) / n
+    k = int(np.nonzero(ok)[0].max()) + 1 if ok.any() else 0
+    rej = np.zeros(n, bool)
+    rej[o[:k]] = True
+    return rej
+
+
+def wilson(k: int, n: int) -> Tuple[float, float]:
+    if n == 0:
+        return (float("nan"), float("nan"))
+    p, z = k / n, 1.96
+    c = (p + z * z / (2 * n)) / (1 + z * z / n)
+    h = z * np.sqrt(p * (1 - p) / n + z * z / (4 * n * n)) / (1 + z * z / n)
+    return (float(c - h), float(c + h))
+
+
+def regle_regimes(pi: float, nul: float, puissance: float, seuil_bassins: float = 0.5, seuil_continuum: float = 0.1,
+                  seuil_nul: float = 0.1, seuil_puissance: float = 0.8) -> str:
+    """Règle de B2 : BASSINS si π ≥ 0,5 ; CONTINUUM si π ≤ 0,1 (et puissance ≥ 0,8) ; sinon MIXTE."""
+    if nul > seuil_nul:
+        return "NON INTERPRÉTABLE (test mal calibré sur le substitut gaussien)"
+    if pi >= seuil_bassins:
+        return "BASSINS"
+    if pi <= seuil_continuum:
+        return "CONTINUUM" if puissance >= seuil_puissance else "NON INTERPRÉTABLE (test sans puissance)"
+    return "MIXTE"
+
+
+def analyser_regimes(R: Sequence[np.ndarray], seed: int = 0, npc: int = 10, alpha: float = 0.05,
+                     paires: Optional[Sequence[Tuple[int, int]]] = None) -> Dict[str, Any]:
+    """R[p] : (n_p, d), une représentation par trajectoire du prompt p. Test par prompt, substitut gaussien, mélanges de
+    paires de prompts (puissance), correction de Benjamini-Hochberg, verdict de B2."""
+    P = len(R)
+    rng = np.random.default_rng(seed)
+    vrai = [test_bimodal(np.asarray(R[p], np.float64), seed + p, npc) for p in range(P)]
+    nul = [test_bimodal(substitut_gaussien(np.asarray(R[p], np.float64), rng), seed + 1000 + p, npc) for p in range(P)]
+    paires = [(2 * i, 2 * i + 1) for i in range(P // 2)] if paires is None else list(paires)
+    mix = []
+    for a, b in paires:
+        na, nb = len(R[a]), len(R[b])
+        m = min(na, nb) // 2
+        ia, ib = rng.permutation(na)[:m], rng.permutation(nb)[:m]
+        mix.append(test_bimodal(np.concatenate([R[a][ia], R[b][ib]]).astype(np.float64), seed + 2000 + a, npc))
+    rej = bh([p for _, p in vrai], alpha)
+    pi = float(rej.mean()) if P else float("nan")
+    tn = float(bh([p for _, p in nul], alpha).mean()) if P else float("nan")
+    pu = float(bh([p for _, p in mix], alpha).mean()) if mix else float("nan")
+    return {"pi": pi, "pi_ci": wilson(int(rej.sum()), P), "n_multi": int(rej.sum()), "nul": tn, "puissance": pu,
+            "verdict": regle_regimes(pi, tn, pu if mix else 1.0), "dip": [d for d, _ in vrai], "p": [p for _, p in vrai],
+            "multimodal": rej.tolist()}
+
+
+def etiquettes_regimes(X: np.ndarray, seed: int = 0, npc: int = 10) -> np.ndarray:
+    """Étiquettes des deux régimes (2-moyennes sur l'ACP standardisée), comme B2."""
+    from sklearn.cluster import KMeans
+    Z = standardiser(X, X)
+    return KMeans(2, n_init=10, random_state=int(seed % 2 ** 31)).fit_predict(Z @ acp(Z, npc))
+
+
+def purete(cles: Sequence, lab: np.ndarray) -> float:
+    grp: Dict[Any, List[int]] = {}
+    for c, l in zip(cles, lab):
+        grp.setdefault(c, []).append(int(l))
+    return sum(max(np.bincount(v)) for v in grp.values()) / len(lab)
+
+
+def bifurcation_prefixe(TK: np.ndarray, lab: np.ndarray, S: Optional[np.ndarray] = None, seed: int = 0,
+                        seuil: float = 0.9, ecart: float = 0.25, n_perm: int = 20) -> Dict[str, Any]:
+    """Premier k où le préfixe de k jetons prédit le régime à ≥ seuil, à ≥ écart au-dessus du hasard (étiquettes
+    permutées) ; gain maximal du préfixe sur le hasard et sa position ; entropie à k* rapportée aux autres positions."""
+    rng = np.random.default_rng(seed)
+    acc, hasard = [], []
+    for k in range(1, TK.shape[1] + 1):
+        cles = [tuple(r[:k]) for r in TK]
+        acc.append(purete(cles, lab))
+        hasard.append(float(np.mean([purete(cles, rng.permutation(lab)) for _ in range(n_perm)])))
+    acc, hasard = np.array(acc), np.array(hasard)
+    ok = np.nonzero((acc >= seuil) & (acc - hasard >= ecart))[0]
+    k = int(ok[0]) + 1 if ok.size else None
+    gain = acc - hasard
+    ratio = float("nan")
+    if k is not None and S is not None:
+        prof = S.mean(0)
+        ratio = float(prof[k - 1] / np.median(np.delete(prof, k - 1)))
+    return {"k": k, "gain_max": float(gain.max()), "k_gain_max": int(gain.argmax()) + 1, "ratio_entropie": ratio,
+            "purete": acc.tolist(), "hasard": hasard.tolist()}
+
+
+def sac_de_jetons(prefixes: Sequence[Sequence[int]], n_hash: int = 4096, n_derniers: int = 3) -> np.ndarray:
+    """Lecteur de jetons : sac des jetons du préfixe (log(1 + compte), hachage) et identité des n derniers jetons avec
+    leur position (hachage). Aucune information du modèle."""
+    X = np.zeros((len(prefixes), 2 * n_hash), np.float32)
+    for i, pr in enumerate(prefixes):
+        for t in pr:
+            X[i, int(t) % n_hash] += 1.0
+        for j, t in enumerate(list(pr)[-n_derniers:][::-1]):
+            X[i, n_hash + zlib.crc32(f"{j}:{int(t)}".encode()) % n_hash] = 1.0
+    X[:, :n_hash] = np.log1p(X[:, :n_hash])
+    return X
+
+
+def _oof_logistique(X: np.ndarray, y: np.ndarray, groupes: np.ndarray, plis: int, C: float) -> np.ndarray:
+    from sklearn.linear_model import LogisticRegression
+    from sklearn.model_selection import GroupKFold
+    from sklearn.preprocessing import StandardScaler
+    s = np.zeros(len(y))
+    for tr, te in GroupKFold(plis).split(X, y, groupes):
+        sc = StandardScaler().fit(X[tr])
+        m = LogisticRegression(C=C, max_iter=3000).fit(sc.transform(X[tr]), y[tr])
+        s[te] = m.decision_function(sc.transform(X[te]))
+    return s
+
+
+def valeur_ajoutee_sur_jetons(H: np.ndarray, prefixes: Sequence[Sequence[int]], y: np.ndarray,
+                              groupes: Optional[np.ndarray] = None, plis: int = 5, C: float = 0.05, B: int = 1000,
+                              seed: int = 0, marge: float = 0.05) -> Dict[str, Any]:
+    """L'état caché à t prédit-il l'issue y mieux qu'un lecteur de jetons du même préfixe ? AUC hors échantillon des deux
+    sondes logistiques (mêmes plis), écart et IC95 par bootstrap sur les groupes.
+
+    VALEUR AJOUTÉE si la borne basse de l'écart > marge ; AUCUNE si l'IC95 ⊂ [−marge ; +marge] ; MOINS QUE LES JETONS si la
+    borne haute < −marge ; sinon INDÉTERMINÉE. Le préfixe contient en principe toute l'information (l'état en est une
+    fonction) : l'écart mesure ce que le calcul du modèle rend linéairement lisible au-delà d'un lecteur de jetons simple.
+    """
+    from sklearn.metrics import roc_auc_score
+    y = np.asarray(y).astype(int)
+    groupes = np.arange(len(y)) if groupes is None else np.asarray(groupes)
+    if len(np.unique(y)) < 2 or min(np.bincount(y)) < plis:
+        return {"verdict": "NON TESTABLE (une seule classe ou trop peu d'exemples)"}
+    sh = _oof_logistique(np.asarray(H, np.float32), y, groupes, plis, C)
+    st = _oof_logistique(sac_de_jetons(prefixes), y, groupes, plis, C)
+    ah, at = roc_auc_score(y, sh), roc_auc_score(y, st)
+    rng = np.random.default_rng(seed)
+    g_u = np.unique(groupes)
+    par = {k: np.nonzero(groupes == k)[0] for k in g_u}
+    bd, bh_, bt = [], [], []
+    for _ in range(B):
+        ix = np.concatenate([par[k] for k in rng.choice(g_u, len(g_u))])
+        if len(np.unique(y[ix])) < 2:
+            continue
+        a1, a2 = roc_auc_score(y[ix], sh[ix]), roc_auc_score(y[ix], st[ix])
+        bh_.append(a1)
+        bt.append(a2)
+        bd.append(a1 - a2)
+    c = ci(bd)
+    if c[0] > marge:
+        v = "VALEUR AJOUTÉE"
+    elif -marge <= c[0] and c[1] <= marge:
+        v = "AUCUNE"
+    elif c[1] < -marge:
+        v = "MOINS QUE LES JETONS"
+    else:
+        v = "INDÉTERMINÉE"
+    return {"auc_etats": float(ah), "auc_etats_ci": ci(bh_), "auc_jetons": float(at), "auc_jetons_ci": ci(bt),
+            "ecart": float(ah - at), "ecart_ci": c, "verdict": v, "n": int(len(y))}
+
+# --------------------------------------------------------------------------
 # Moteur principal
 # --------------------------------------------------------------------------
 
@@ -129,6 +423,9 @@ class TrajectoryBifurcationEngine:
     # tokens identiques, ex. "<think>" chez Qwen3) donne un seuil ~0 et une
     # bifurcation « détectée » dès t = min_steps. Valeurs heuristiques.
     DEFAULT_ABS_FLOOR = {"js": 0.05, "residual": 0.05, "residual_l2": 0.0}
+    # Dénominateurs minimaux des recovery (nats) : en dessous, le rapport est instable
+    MIN_JS_DEN = 0.05
+    MIN_LL_DEN = 0.5
 
     def __init__(
         self,
@@ -137,29 +434,45 @@ class TrajectoryBifurcationEngine:
         torch_dtype: Optional[torch.dtype] = None,
         layers_to_track: Optional[List[int]] = None,
         max_new_tokens: int = 64,
-        temperature: float = 0.8,
-        top_p: float = 0.95,
+        temperature: float = 0.6,
+        top_p: float = 1.0,
         topk_for_divergence: int = 256,
         seed: int = 0,
         trust_remote_code: bool = False,
         model: Optional[torch.nn.Module] = None,
         tokenizer: Optional[Any] = None,
+        sampler: str = "gumbel",
+        q_tsallis: float = 1.45,
+        chat: Optional[bool] = None,
+        forbid_special: Optional[bool] = None,
+        batch_size: Optional[int] = None,
     ):
+        """sampler : "gumbel" (protocole SGZ, défaut) ou "multinomial" (v0.1.x). chat : None = gabarit de chat seulement si
+        le tokenizer en a un et que le nom du modèle ne contient pas « Base ». forbid_special : None = vrai pour "gumbel"
+        (longueur fixe, comme SGZ), faux pour "multinomial" (arrêt sur EOS, comme v0.1.x)."""
+        if sampler not in ("gumbel", "multinomial"):
+            raise ValueError("sampler : 'gumbel' ou 'multinomial'")
         self.model_name = model_name
         self.max_new_tokens = max_new_tokens
         self.temperature = temperature
         self.top_p = top_p
         self.topk_for_divergence = topk_for_divergence
         self.seed = seed
+        self.sampler = sampler
+        self.q = q_tsallis
+        self.forbid_special = (sampler == "gumbel") if forbid_special is None else forbid_special
 
         self.device = torch.device(
             device or ("cuda" if torch.cuda.is_available() else "cpu")
         )
         if torch_dtype is None:
-            # bf16 sur CPU est lent sans AVX512-BF16/AMX : float32 par défaut
-            torch_dtype = (
-                torch.bfloat16 if self.device.type == "cuda" else torch.float32
-            )
+            # bf16 sur CPU est lent sans AVX512-BF16/AMX : float32 par défaut ;
+            # sur GPU sans bf16 natif (T4, capacité < 8), fp16 comme SGZ
+            if self.device.type == "cuda":
+                major = torch.cuda.get_device_capability(self.device)[0]
+                torch_dtype = torch.bfloat16 if major >= 8 else torch.float16
+            else:
+                torch_dtype = torch.float32
 
         if model is None:
             print(f"[Core] Chargement de {model_name} sur {self.device}...")
@@ -181,6 +494,9 @@ class TrajectoryBifurcationEngine:
         self.tokenizer = tokenizer
         self.model.eval()
         self.device = next(self.model.parameters()).device
+        if chat is None:
+            chat = bool(getattr(tokenizer, "chat_template", None)) and "base" not in model_name.lower()
+        self.chat = chat
 
         self.num_layers = self.model.config.num_hidden_layers
         self.layers_to_track = layers_to_track or [
@@ -197,9 +513,30 @@ class TrajectoryBifurcationEngine:
             for e in list(eos) + [self.tokenizer.eos_token_id]
             if e is not None
         }
+        # Jetons interdits par l'échantillonneur SGZ : spéciaux, fin de texte
+        forbid = set(getattr(tokenizer, "all_special_ids", None) or []) | set(self.eos_token_ids)
+        forbid.discard(None)
+        self._forbid = sorted(int(x) for x in forbid)
+        self._n_tok = len(tokenizer)
+        self._V = self.model.get_output_embeddings().weight.shape[0]
+        self.pad_id = tokenizer.pad_token_id if tokenizer.pad_token_id is not None else (
+            tokenizer.eos_token_id if tokenizer.eos_token_id is not None else 0)
+        npar = sum(p.numel() for p in self.model.parameters())
+        self.batch_size = batch_size or (48 if npar < 3e9 else 32)
 
         print(f"[Core] Couches suivies : {self.layers_to_track}")
-        print(f"[Core] Top-k pour divergences : {self.topk_for_divergence}")
+        print(f"[Core] Échantillonneur : {self.sampler}, T = {self.temperature}, top-p = {self.top_p} ; chat = {self.chat}")
+
+    @classmethod
+    def sgz(cls, model_name: str, **kw) -> "TrajectoryBifurcationEngine":
+        """Moteur réglé comme les notebooks SGZ (A1c–B2) : Gumbel à nombres aléatoires communs, T = 0,6, sans top-p, prompt
+        brut, jetons spéciaux interdits, Tsallis q = 1,45, lots de 48 (< 3 milliards de paramètres) ou 32."""
+        kw.setdefault("sampler", "gumbel")
+        kw.setdefault("temperature", 0.6)
+        kw.setdefault("top_p", 1.0)
+        kw.setdefault("chat", False)
+        kw.setdefault("q_tsallis", 1.45)
+        return cls(model_name=model_name, **kw)
 
     # ------------------------------------------------------------------
     # Hooks : capture et injection au même point (sortie brute de couche)
@@ -222,10 +559,11 @@ class TrajectoryBifurcationEngine:
     def _capture_hooks(
         self, layers: List[int]
     ) -> Iterator[Dict[int, torch.Tensor]]:
-        """Capture la sortie de chaque couche à la dernière position.
+        """Capture la sortie de chaque couche à la dernière position (ligne 0 du lot, comme v0.1.x).
 
         On n'utilise pas output_hidden_states : chez HF, hidden_states[-1]
         inclut la norme finale, ce qui ne correspond pas au point d'injection.
+        Correspondance : couche l ici = hidden_states[l + 1] de HF pour l < L − 1.
         """
         captured: Dict[int, torch.Tensor] = {}
 
@@ -241,6 +579,25 @@ class TrajectoryBifurcationEngine:
             layer_modules[l].register_forward_hook(make_hook(l))
             for l in layers
         ]
+        try:
+            yield captured
+        finally:
+            for h in handles:
+                h.remove()
+
+    @contextlib.contextmanager
+    def _capture_hooks_batch(self, layers: Sequence[int], last: int = 1) -> Iterator[Dict[int, torch.Tensor]]:
+        """Capture, pour tout le lot, la sortie de chaque couche aux `last` dernières positions (float32, sur l'appareil)."""
+        captured: Dict[int, torch.Tensor] = {}
+
+        def make_hook(l):
+            def hook_fn(module, input, output):
+                hidden, _ = self._split_output(output)
+                captured[l] = hidden[:, -last:, :].detach().float()
+
+            return hook_fn
+
+        handles = [self._decoder_layers()[l].register_forward_hook(make_hook(l)) for l in layers]
         try:
             yield captured
         finally:
@@ -281,7 +638,7 @@ class TrajectoryBifurcationEngine:
             handle.remove()
 
     # ------------------------------------------------------------------
-    # Génération
+    # Échantillonnage
     # ------------------------------------------------------------------
 
     def _make_generator(self, seed: Optional[int]) -> Optional[torch.Generator]:
@@ -291,9 +648,38 @@ class TrajectoryBifurcationEngine:
         g.manual_seed(int(seed))
         return g
 
+    def _mask(self, score: torch.Tensor) -> torch.Tensor:
+        """Jetons interdits (spéciaux, fin de texte, hors vocabulaire du tokenizer), comme SGZ."""
+        if self.forbid_special and self._forbid:
+            score[:, self._forbid] = -float("inf")
+        if self._V > self._n_tok:
+            score[:, self._n_tok:] = -float("inf")
+        return score
+
+    def _nucleus(self, score: torch.Tensor, logits: torch.Tensor) -> torch.Tensor:
+        """Top-p appliqué au score de Gumbel (même noyau que la loi tempérée)."""
+        if self.top_p >= 1.0:
+            return score
+        probs = F.softmax(logits / self.temperature, dim=-1)
+        sp, si = torch.sort(probs, descending=True)
+        out = torch.cumsum(sp, dim=-1) > self.top_p
+        out[..., 1:] = out[..., :-1].clone()
+        out[..., 0] = False
+        mask = torch.zeros_like(out).scatter(-1, si, out)
+        return score.masked_fill(mask, -float("inf"))
+
+    def _gumbel_next(self, logits: torch.Tensor, seeds: Sequence[int]) -> torch.Tensor:
+        """argmax(z / T + Gumbel(graine)) sur les jetons permis (T ≤ 0 : argmax)."""
+        if self.temperature <= 0:
+            return torch.argmax(self._mask(logits.clone()), dim=-1)
+        score = logits / self.temperature + gumbel_noise(self._V, seeds, logits.device)
+        score = self._nucleus(score, logits)
+        return torch.argmax(self._mask(score), dim=-1)
+
     def _sample(
         self, logits: torch.Tensor, generator: Optional[torch.Generator]
     ) -> torch.Tensor:
+        """Échantillonneur v0.1.x (torch.multinomial)."""
         if self.temperature <= 0:
             return torch.argmax(logits, dim=-1, keepdim=True)
 
@@ -322,6 +708,204 @@ class TrajectoryBifurcationEngine:
         remaining_mass = float(max(0.0, 1.0 - top_probs_np.sum()))
         return (top_indices_np, top_probs_np, remaining_mass)
 
+    # ------------------------------------------------------------------
+    # Génération par lots (protocole SGZ)
+    # ------------------------------------------------------------------
+
+    def _left_pad(self, seqs: Sequence[Sequence[int]]):
+        L = max(len(s) for s in seqs)
+        ids = torch.full((len(seqs), L), self.pad_id, dtype=torch.long)
+        attn = torch.zeros((len(seqs), L), dtype=torch.long)
+        for j, s in enumerate(seqs):
+            ids[j, L - len(s):] = torch.tensor(list(s), dtype=torch.long)
+            attn[j, L - len(s):] = 1
+        return ids.to(self.device), attn.to(self.device), L
+
+    @torch.no_grad()
+    def generer_lot(
+        self,
+        contexts: Sequence[Sequence[int]],
+        row_ids: Sequence[int],
+        n_steps: int,
+        seed_base: Optional[int] = None,
+        step0: int = 0,
+        layers: Sequence[int] = (),
+        keep_steps: bool = False,
+        mean_layers: Sequence[int] = (),
+        force: Optional[Callable[[int, torch.Tensor, torch.Tensor], torch.Tensor]] = None,
+        topk: int = 0,
+        steps_to_keep: Optional[Sequence[int]] = None,
+    ) -> Dict[str, Any]:
+        """Un lot de trajectoires (remplissage à gauche, KV-cache), échantillonneur Gumbel : graine du pas s de la ligne j =
+        seed_base + 100003·row_ids[j] + step0 + s (identique à Gen.sample des notebooks SGZ).
+
+        layers + keep_steps : états par pas (n, n_steps, d), ou seulement aux pas steps_to_keep (n, len(steps_to_keep), d) ;
+        mean_layers : moyenne des états après lecture des jetons générés (une passe de plus pour lire le dernier).
+        force(s, z, nxt) peut remplacer les jetons tirés (choc, préfixe forcé). lengths : jusqu'à la première fin de texte
+        incluse (les jetons suivants sont générés mais n'ont pas de sens si les jetons spéciaux sont permis).
+        """
+        garder = None if steps_to_keep is None else set(int(x) for x in steps_to_keep)
+        seed_base = self.seed if seed_base is None else seed_base
+        n = len(contexts)
+        rec = sorted(set(layers if keep_steps else ()) | set(mean_layers))
+        toks = np.zeros((n, n_steps), np.int64)
+        Hs, Ht = np.zeros((n, n_steps), np.float32), np.zeros((n, n_steps), np.float32)
+        steps = {l: [] for l in (layers if keep_steps else ())}
+        acc = {l: None for l in mean_layers}
+        tk: List[List[TopK]] = [[] for _ in range(n)] if topk else None
+        ids, attn, _ = self._left_pad(contexts)
+        pos = (attn.cumsum(-1) - 1).clamp(min=0)
+        past = None
+        with self._capture_hooks_batch(rec) as cap:
+            for s in range(n_steps + (1 if mean_layers else 0)):
+                out = self.model(input_ids=ids, attention_mask=attn, position_ids=pos, past_key_values=past, use_cache=True)
+                if s >= 1:
+                    for l in mean_layers:
+                        h = cap[l][:, -1, :]
+                        acc[l] = h.clone() if acc[l] is None else acc[l] + h
+                if s == n_steps:
+                    break
+                if garder is None or s in garder:
+                    for l in steps:
+                        steps[l].append(cap[l][:, -1, :].cpu().numpy().astype(np.float16))
+                past = out.past_key_values
+                z = out.logits[:, -1, :].float()
+                if not torch.isfinite(z).all():
+                    raise FloatingPointError(f"logits non finis au pas {s}")
+                e = entropies_from_logits(z, [1.0, self.q])
+                Hs[:, s], Ht[:, s] = e[1.0].cpu().numpy(), e[self.q].cpu().numpy()
+                if topk:
+                    p = F.softmax(z, dim=-1)
+                    tp, ti = torch.topk(p, k=min(topk, p.shape[-1]), dim=-1)
+                    tp, ti = tp.cpu().numpy(), ti.cpu().numpy()
+                    for j in range(n):
+                        tk[j].append((ti[j], tp[j], float(max(0.0, 1.0 - tp[j].sum()))))
+                seeds = [seed_base + PAS_GRAINE * int(row_ids[j]) + step0 + s for j in range(n)]
+                nxt = self._gumbel_next(z, seeds)
+                if force is not None:
+                    nxt = force(s, z, nxt)
+                toks[:, s] = nxt.cpu().numpy()
+                ids = nxt[:, None].to(self.device)
+                attn = torch.cat([attn, torch.ones((n, 1), dtype=attn.dtype, device=self.device)], dim=1)
+                pos = pos[:, -1:] + 1
+        fin = np.isin(toks, list(self.eos_token_ids))
+        lengths = np.where(fin.any(1), fin.argmax(1) + 1, n_steps)
+        return {"tokens": toks, "entropy_shannon": Hs, "entropy_tsallis": Ht, "lengths": lengths,
+                "hidden_steps": {l: np.stack(v, 1) for l, v in steps.items()},
+                "hidden_mean": {l: (acc[l] / n_steps).cpu().numpy() for l in mean_layers}, "topk": tk}
+
+    def encoder(self, prompt: str, system_prompt: Optional[str] = None,
+                chat_template_kwargs: Optional[Dict[str, Any]] = None) -> List[int]:
+        """Jetons du prompt : gabarit de chat si self.chat, sinon tokenizer.encode(prompt) (comme SGZ)."""
+        if self.chat:
+            return self.build_prompt_ids(prompt, system_prompt, chat_template_kwargs)[0].cpu().tolist()
+        return list(self.tokenizer.encode(prompt))
+
+    def generer_ensemble(
+        self,
+        prompts: Sequence[str],
+        n: int,
+        n_steps: Optional[int] = None,
+        seed_base: Optional[int] = None,
+        row_stride: int = 256,
+        layers: Sequence[int] = (),
+        keep_steps: bool = False,
+        mean_layers: Sequence[int] = (),
+        topk: int = 0,
+        batch_size: Optional[int] = None,
+        prompt_ids: Optional[Sequence[Sequence[int]]] = None,
+        progress: bool = True,
+        steps_to_keep: Optional[Sequence[int]] = None,
+    ) -> Ensemble:
+        """n trajectoires par prompt, par lots. Ligne (p, j) : identifiant de bruit p·row_stride + j (B2 : 256), lots formés
+        dans l'ordre (p, j) comme B2 ; même seed_base, même modèle et même taille de lot → mêmes jetons que B2."""
+        if self.sampler != "gumbel":
+            raise ValueError("generer_ensemble utilise l'échantillonneur 'gumbel'")
+        if n > row_stride:
+            raise ValueError("n doit être ≤ row_stride (identifiants de bruit distincts)")
+        n_steps = self.max_new_tokens if n_steps is None else n_steps
+        enc = [list(x) for x in prompt_ids] if prompt_ids is not None else [self.encoder(p) for p in prompts]
+        bs = batch_size or self.batch_size
+        jobs = [(p, j) for p in range(len(enc)) for j in range(n)]
+        parts = []
+        it = range(0, len(jobs), bs)
+        for b0 in (tqdm(it, desc=f"Ensemble {len(enc)}×{n}") if progress else it):
+            lot = jobs[b0:b0 + bs]
+            parts.append(self.generer_lot([enc[p] for p, _ in lot], [p * row_stride + j for p, j in lot], n_steps,
+                                          seed_base=seed_base, layers=layers, keep_steps=keep_steps,
+                                          mean_layers=mean_layers, topk=topk, steps_to_keep=steps_to_keep))
+        cat = lambda k: np.concatenate([x[k] for x in parts])
+        return Ensemble(
+            prompt_ids=enc, prompt_of=np.array([p for p, _ in jobs]), row_ids=np.array([p * row_stride + j for p, j in jobs]),
+            tokens=cat("tokens"), entropy_shannon=cat("entropy_shannon"), entropy_tsallis=cat("entropy_tsallis"),
+            hidden_steps={l: np.concatenate([x["hidden_steps"][l] for x in parts]) for l in (layers if keep_steps else ())},
+            hidden_mean={l: np.concatenate([x["hidden_mean"][l] for x in parts]) for l in mean_layers},
+            topk=sum((x["topk"] for x in parts), []) if topk else None,
+            kept_steps=None if steps_to_keep is None else [int(x) for x in steps_to_keep], lengths=cat("lengths"),
+            seed_base=self.seed if seed_base is None else seed_base, temperature=self.temperature, q=self.q)
+
+    @torch.no_grad()
+    def rejouer_moyennes(self, contexts: Sequence[Sequence[int]], suites: np.ndarray, layers: Sequence[int],
+                         batch_size: Optional[int] = None) -> Dict[int, np.ndarray]:
+        """Passe complète (sans cache) sur contexte + suite : moyenne, sur les jetons de la suite, de la sortie de chaque
+        couche. Identique à la représentation R_h de B2 (hidden_states[c] de HF = couche c − 1 ici, pour c < L)."""
+        bs = batch_size or self.batch_size
+        T = suites.shape[1]
+        out = {l: [] for l in layers}
+        for b0 in range(0, len(contexts), bs):
+            loc = range(b0, min(len(contexts), b0 + bs))
+            ids, attn, _ = self._left_pad([list(contexts[i]) + suites[i].tolist() for i in loc])
+            pos = (attn.cumsum(-1) - 1).clamp(min=0)
+            with self._capture_hooks_batch(layers, last=T) as cap:
+                self.model(input_ids=ids, attention_mask=attn, position_ids=pos, use_cache=False)
+            for l in layers:
+                out[l].append(cap[l].mean(1).cpu().numpy())
+        return {l: np.concatenate(v) for l, v in out.items()}
+
+    @torch.no_grad()
+    def ensemble_choc(self, prompts: Sequence[str], t0: int, n_steps: int, rang_lo: int = 1000, rang_hi: int = 5000,
+                      seed_base: Optional[int] = None, seed_rangs: Optional[int] = None,
+                      batch_size: Optional[int] = None) -> Dict[str, Any]:
+        """Protocole A1 : pour chaque prompt, un témoin et un choc générés ensemble avec le même bruit ; au pas t0, le choc
+        reçoit le jeton de rang r (tiré dans [rang_lo, rang_hi], jamais celui du témoin) dans la loi brute du modèle."""
+        seed_base = self.seed if seed_base is None else seed_base
+        rng = np.random.default_rng((seed_base + 5) if seed_rangs is None else seed_rangs)
+        enc = [self.encoder(p) for p in prompts]
+        P = len(enc)
+        rangs = rng.integers(rang_lo, rang_hi + 1, P)
+        res = {"temoin": np.zeros((P, n_steps), np.int64), "choc": np.zeros((P, n_steps), np.int64),
+               "S_temoin": np.zeros((P, n_steps), np.float32), "S_choc": np.zeros((P, n_steps), np.float32),
+               "X": np.zeros(P, np.int64), "rang": np.zeros(P, np.int64), "surprise": np.zeros(P)}
+        bs = max(1, (batch_size or self.batch_size) // 2)
+        for b0 in range(0, P, bs):
+            loc = list(range(b0, min(P, b0 + bs)))
+            m = len(loc)
+
+            def force(s, z, nxt, loc=loc, m=m):
+                if s < t0:
+                    nxt[m:] = nxt[:m]
+                elif s == t0:
+                    zz = self._mask(z[m:].clone())
+                    lp = torch.log_softmax(z[m:].double(), dim=-1)
+                    order = torch.argsort(zz, dim=-1, descending=True)
+                    for j, i in enumerate(loc):
+                        rk = int(min(rangs[i], order.shape[1] - 2))
+                        if int(order[j, rk]) == int(nxt[j]):
+                            rk += 1
+                        x = int(order[j, rk])
+                        res["X"][i], res["rang"][i], res["surprise"][i] = x, rk, -float(lp[j, x])
+                        nxt[m + j] = x
+                return nxt
+
+            o = self.generer_lot([enc[i] for i in loc] * 2, loc * 2, n_steps, seed_base=seed_base, force=force)
+            res["temoin"][loc], res["choc"][loc] = o["tokens"][:m], o["tokens"][m:]
+            res["S_temoin"][loc], res["S_choc"][loc] = o["entropy_tsallis"][:m], o["entropy_tsallis"][m:]
+        return res
+
+    # ------------------------------------------------------------------
+    # Génération une trajectoire à la fois (API v0.1.x)
+    # ------------------------------------------------------------------
+
     @torch.no_grad()
     def _decode_loop(
         self,
@@ -330,18 +914,22 @@ class TrajectoryBifurcationEngine:
         seed: Optional[int],
         record_layers: Optional[List[int]] = None,
         patch: Optional[Tuple[int, int, torch.Tensor]] = None,
+        step0: int = 0,
     ) -> Dict[str, Any]:
         """Boucle d'échantillonnage commune (ensemble et continuations).
 
         Entropie et top-k sont mesurés sur la distribution du modèle (T = 1) ;
-        l'échantillonnage utilise temperature / top_p.
+        l'échantillonnage utilise temperature / top_p. Avec "gumbel", la graine du
+        pas s est seed_base + 100003·seed + step0 + s (seed = identifiant de ligne).
         """
         record_layers = record_layers or []
-        generator = self._make_generator(seed)
+        generator = self._make_generator(seed) if self.sampler == "multinomial" else None
         new_tokens: List[int] = []
         entropies: List[float] = []
+        tsallis: List[float] = []
         topk_dists: List[TopK] = []
         hiddens: Dict[int, List[np.ndarray]] = {l: [] for l in record_layers}
+        row = 0 if seed is None else int(seed)
 
         with contextlib.ExitStack() as stack:
             captured = stack.enter_context(self._capture_hooks(record_layers))
@@ -350,7 +938,7 @@ class TrajectoryBifurcationEngine:
 
             past = None
             cur = input_ids
-            for _ in range(max_new_tokens):
+            for s in range(max_new_tokens):
                 outputs = self.model(
                     input_ids=cur,
                     past_key_values=past,
@@ -364,11 +952,15 @@ class TrajectoryBifurcationEngine:
                 entropies.append(
                     float(-torch.sum(probs * torch.log(probs + 1e-12)).item())
                 )
+                tsallis.append(float(entropies_from_logits(logits, [self.q])[self.q][0]))
                 topk_dists.append(self._topk(probs))
                 for l in record_layers:
                     hiddens[l].append(captured[l].numpy())
 
-                next_token = self._sample(logits, generator)
+                if self.sampler == "gumbel":
+                    next_token = self._gumbel_next(logits, [self.seed + PAS_GRAINE * row + step0 + s]).view(1, 1)
+                else:
+                    next_token = self._sample(logits, generator)
                 token = int(next_token.item())
                 new_tokens.append(token)
                 if token in self.eos_token_ids:
@@ -378,6 +970,7 @@ class TrajectoryBifurcationEngine:
         return {
             "new_tokens": new_tokens,
             "entropies": entropies,
+            "tsallis": tsallis,
             "topk": topk_dists,
             "hidden_states": hiddens,
         }
@@ -388,6 +981,9 @@ class TrajectoryBifurcationEngine:
         system_prompt: Optional[str] = None,
         chat_template_kwargs: Optional[Dict[str, Any]] = None,
     ) -> torch.Tensor:
+        """Jetons du prompt (1, n) : gabarit de chat si self.chat, sinon prompt brut."""
+        if not self.chat:
+            return torch.tensor([list(self.tokenizer.encode(prompt))], device=self.device)
         messages = []
         if system_prompt:
             messages.append({"role": "system", "content": system_prompt})
@@ -422,6 +1018,7 @@ class TrajectoryBifurcationEngine:
             entropy_shannon=out["entropies"],
             hidden_states=out["hidden_states"],
             topk_distributions=out["topk"],
+            entropy_tsallis=out["tsallis"],
         )
 
     def generate_ensemble(
@@ -432,6 +1029,7 @@ class TrajectoryBifurcationEngine:
         chat_template_kwargs: Optional[Dict[str, Any]] = None,
         seed: Optional[int] = None,
     ) -> List[Trajectory]:
+        """Liste de Trajectory (API v0.1.x). Avec "gumbel", la trajectoire i a l'identifiant de bruit base + i."""
         input_ids = self.build_prompt_ids(
             prompt, system_prompt, chat_template_kwargs
         )
@@ -494,12 +1092,23 @@ class TrajectoryBifurcationEngine:
 
     @classmethod
     def classify_pair(cls, src: Trajectory, tgt: Trajectory, t_patch: int) -> str:
+        """Classement v0.1.x : negative_control, positive_control ou informative."""
         first_diff = cls.first_diff_step(src, tgt, t_patch)
         if first_diff is None:
             return "negative_control"
         if first_diff == t_patch - 1:
             return "positive_control"
         return "informative"
+
+    @classmethod
+    def classify_pair_detail(cls, src: Trajectory, tgt: Trajectory, t_patch: int) -> str:
+        """Comme classify_pair, « informative » scindé : informative_context (dernier jeton du préfixe identique, le patch
+        ne transmet que le contexte) ou informative_token (dernier jeton différent : le patch transmet aussi son identité)."""
+        kind = cls.classify_pair(src, tgt, t_patch)
+        if kind != "informative":
+            return kind
+        same = src.generated_ids[t_patch - 1] == tgt.generated_ids[t_patch - 1]
+        return "informative_context" if same else "informative_token"
 
     @staticmethod
     def _cosine_distance(u: np.ndarray, v: np.ndarray) -> float:
@@ -521,6 +1130,7 @@ class TrajectoryBifurcationEngine:
         residual_dists = {l: [] for l in self.layers_to_track}
         residual_cos = {l: [] for l in self.layers_to_track}
         js_over_time = []
+        js_diff_prefix = []
         frac_same_prefix = []
 
         for t in range(min_len):
@@ -552,23 +1162,23 @@ class TrajectoryBifurcationEngine:
                     )
                 )
 
-            js_over_time.append(
-                float(
-                    np.mean(
-                        [
-                            self.js_divergence_topk(
-                                trajectories[i].topk_distributions[t],
-                                trajectories[j].topk_distributions[t],
-                            )
-                            for i, j in pairs
-                        ]
-                    )
+            js_t = [
+                self.js_divergence_topk(
+                    trajectories[i].topk_distributions[t],
+                    trajectories[j].topk_distributions[t],
                 )
-            )
+                for i, j in pairs
+            ]
+            js_over_time.append(float(np.mean(js_t)))
+            dj = [x for x, s in zip(js_t, same) if not s]
+            js_diff_prefix.append(float(np.mean(dj)) if dj else 0.0)
 
         ent_matrix = np.array(
             [t.entropy_shannon[:min_len] for t in trajectories]
         )
+        js_arr, frac = np.array(js_over_time), np.array(frac_same_prefix)
+        corr = (float(np.corrcoef(js_arr, 1 - frac)[0, 1])
+                if min_len > 2 and np.std(js_arr) > 0 and np.std(frac) > 0 else None)
 
         return {
             "min_len": min_len,
@@ -578,8 +1188,13 @@ class TrajectoryBifurcationEngine:
             "residual_cos_over_time": {
                 l: np.array(v) for l, v in residual_cos.items()
             },
-            "js_over_time": np.array(js_over_time),
-            "frac_pairs_same_prefix": np.array(frac_same_prefix),
+            "js_over_time": js_arr,
+            "frac_pairs_same_prefix": frac,
+            # JS moyenne sur les seules paires dont les préfixes diffèrent : une JS
+            # moyenne qui monte peut ne refléter que la part de paires divergentes
+            "js_paires_divergentes": np.array(js_diff_prefix),
+            # Critère C1 de v0.1.5 : ≥ 0,9 → la « bifurcation » JS suit les jetons
+            "corr_js_divergence_jetons": corr,
             "entropy_mean": ent_matrix.mean(axis=0),
             "entropy_std": ent_matrix.std(axis=0),
             "n_trajectories": n,
@@ -594,7 +1209,12 @@ class TrajectoryBifurcationEngine:
         min_steps: int = 4,
         abs_floor: Optional[float] = None,
     ) -> Dict[str, Any]:
-        """measure : "js", "residual" (cosinus) ou "residual_l2"."""
+        """measure : "js", "residual" (cosinus) ou "residual_l2".
+
+        Attention : une bifurcation JS coïncide le plus souvent avec la divergence
+        des jetons (corr_js_divergence_jetons) ; pour une structure interne, voir
+        analyser_regimes et valeur_ajoutee_sur_jetons.
+        """
         if measure == "js":
             series = divergence_data["js_over_time"]
             used = "js"
@@ -647,13 +1267,18 @@ class TrajectoryBifurcationEngine:
         max_new_tokens: int = 32,
         seed: Optional[int] = None,
         patch: Optional[Tuple[int, int, torch.Tensor]] = None,
+        step0: int = 0,
     ) -> Continuation:
-        """Continue `prefix_ids`, éventuellement avec patch (couche, pos, vecteur)."""
+        """Continue `prefix_ids`, éventuellement avec patch (couche, pos, vecteur).
+
+        Avec "gumbel", seed = identifiant de ligne et step0 = indice du premier jeton généré : même (seed, step0) → même
+        bruit à chaque position, pour la version propre comme pour la version patchée."""
         out = self._decode_loop(
             prefix_ids.to(self.device),
             max_new_tokens=max_new_tokens,
             seed=seed,
             patch=patch,
+            step0=step0,
         )
         return Continuation(
             token_ids=out["new_tokens"],
@@ -709,6 +1334,7 @@ class TrajectoryBifurcationEngine:
         pour un témoin) et source. Distributions exactes sur tout le
         vocabulaire. À la position patchée, les clés/valeurs des couches
         <= layer restent celles de la cible : pour k >= 1 l'état est hybride.
+        Rapports à None si le dénominateur est trop petit (MIN_JS_DEN, MIN_LL_DEN).
         """
         if src.prompt_len != tgt.prompt_len:
             raise ValueError("Source et cible n'ont pas le même prompt")
@@ -734,7 +1360,7 @@ class TrajectoryBifurcationEngine:
         lp_clean = log_probs(tgt.token_ids[:prefix_end])
         lp_patch = log_probs(
             tgt.token_ids[:prefix_end],
-            (layer, position, torch.from_numpy(np.asarray(vector))),
+            (layer, position, torch.from_numpy(np.asarray(vector, dtype=np.float32))),
         )
         lp_src = log_probs(src.token_ids[:prefix_end])
 
@@ -756,10 +1382,10 @@ class TrajectoryBifurcationEngine:
             "horizon": k_steps,
             "recovery_per_step": per_step,
             "recovery_multistep": (
-                1.0 - float(js_ps.sum()) / den_js if den_js > 1e-4 else None
+                1.0 - float(js_ps.sum()) / den_js if den_js > self.MIN_JS_DEN else None
             ),
             "recovery_loglik": (
-                (ll_patch - ll_clean) / den_ll if abs(den_ll) > 1e-3 else None
+                (ll_patch - ll_clean) / den_ll if abs(den_ll) > self.MIN_LL_DEN else None
             ),
             "js_clean_source": js_cs.tolist(),
             "js_patched_source": js_ps.tolist(),
@@ -771,22 +1397,24 @@ class TrajectoryBifurcationEngine:
         trajectories: List[Trajectory],
         t_min: int,
         n_pairs: int,
+        kind: str = "informative",
     ) -> Optional[int]:
-        """Premier t >= t_min offrant au moins n_pairs paires informatives.
+        """Premier t >= t_min offrant au moins n_pairs paires du type `kind`
+        ("informative", "informative_context" ou "informative_token").
 
         À t* même, les paires ne diffèrent souvent qu'au dernier token
         (témoins positifs) : patcher là ne teste rien.
         """
         n = len(trajectories)
         lengths = [len(t.entropy_shannon) for t in trajectories]
+        cls = self.classify_pair if kind == "informative" else self.classify_pair_detail
         for t in range(max(1, t_min), max(lengths)):
             count = sum(
                 1
                 for i in range(n)
                 for j in range(i + 1, n)
                 if min(lengths[i], lengths[j]) > t
-                and self.classify_pair(trajectories[i], trajectories[j], t)
-                == "informative"
+                and cls(trajectories[i], trajectories[j], t) == kind
             )
             if count >= n_pairs:
                 return t
@@ -824,20 +1452,21 @@ class TrajectoryBifurcationEngine:
         prefix_ids = torch.tensor(
             [tgt.token_ids[:prefix_end]], device=self.device
         )
-        source_hidden = torch.from_numpy(src.hidden_states[layer][t_patch])
+        source_hidden = torch.from_numpy(np.asarray(src.hidden_states[layer][t_patch], dtype=np.float32))
 
         if seed is None:
             seed = self.seed + 7919 * (source_idx + 1) + target_idx
-        # Même graine : toute différence entre les deux continuations vient du
-        # patch, pas du bruit d'échantillonnage
+        # Même graine (et, avec "gumbel", même bruit à chaque position) : toute
+        # différence entre les deux continuations vient du patch
         clean = self.continue_from_prefix(
-            prefix_ids, max_continuation_tokens, seed=seed
+            prefix_ids, max_continuation_tokens, seed=seed, step0=t_patch
         )
         patched = self.continue_from_prefix(
             prefix_ids,
             max_continuation_tokens,
             seed=seed,
             patch=(layer, position, source_hidden),
+            step0=t_patch,
         )
 
         orig_set = set(clean.text.split())
@@ -905,6 +1534,7 @@ class TrajectoryBifurcationEngine:
             recovery_loglik=forced.get("recovery_loglik"),
             recovery_per_step=forced.get("recovery_per_step"),
             forced_horizon=forced.get("horizon", 0),
+            pair_detail=self.classify_pair_detail(src, tgt, t_patch),
         )
 
     def reversibility_analysis(
@@ -917,6 +1547,7 @@ class TrajectoryBifurcationEngine:
         max_continuation_tokens: int = 32,
         seed: Optional[int] = None,
         forced_horizon: int = 16,
+        detail: bool = False,
     ) -> List[PatchResult]:
         """Patch source → cible sur des paires tirées au hasard.
 
@@ -924,6 +1555,7 @@ class TrajectoryBifurcationEngine:
         Témoins négatifs : préfixes identiques (patch nul ; continuations
         identiques attendues). Témoins positifs : seul le dernier token du
         préfixe diffère (recovery = 1 attendu). Jusqu'à n_controls de chaque.
+        detail=True : n_pairs paires « contexte » et n_pairs paires « jeton ».
         """
         if layer is None:
             layer = self.layers_to_track[len(self.layers_to_track) // 2]
@@ -936,11 +1568,13 @@ class TrajectoryBifurcationEngine:
         ordered = [(i, j) for i in range(n) for j in range(n) if i != j]
         rng.shuffle(ordered)
 
-        quota = {
-            "informative": n_pairs,
-            "positive_control": n_controls,
-            "negative_control": n_controls,
-        }
+        if detail:
+            quota = {"informative_context": n_pairs, "informative_token": n_pairs,
+                     "positive_control": n_controls, "negative_control": n_controls}
+            cls = self.classify_pair_detail
+        else:
+            quota = {"informative": n_pairs, "positive_control": n_controls, "negative_control": n_controls}
+            cls = self.classify_pair
         selected: Dict[str, List[Tuple[int, int]]] = {k: [] for k in quota}
         seen = set()
         for i, j in ordered:
@@ -950,7 +1584,7 @@ class TrajectoryBifurcationEngine:
             if min(len(trajectories[i].hidden_states[layer]),
                    len(trajectories[j].hidden_states[layer])) <= t_patch:
                 continue
-            kind = self.classify_pair(trajectories[i], trajectories[j], t_patch)
+            kind = cls(trajectories[i], trajectories[j], t_patch)
             if len(selected[kind]) < quota[kind]:
                 selected[kind].append((i, j))
 
@@ -982,10 +1616,14 @@ class TrajectoryBifurcationEngine:
             values = [v for v in values if v is not None]
             return float(np.mean(values)) if values else None
 
+        def median(values):
+            values = [v for v in values if v is not None]
+            return float(np.median(values)) if values else None
+
         info = [r for r in patch_results if r.pair_kind == "informative"]
         pos = [r for r in patch_results if r.pair_kind == "positive_control"]
         neg = [r for r in patch_results if r.pair_kind == "negative_control"]
-        return {
+        out = {
             "n_patch_pairs": len(info),
             "n_positive_controls": len(pos),
             "n_negative_controls": len(neg),
@@ -1008,6 +1646,14 @@ class TrajectoryBifurcationEngine:
                 else None
             ),
         }
+        # v0.2 : médianes séparées « contexte » / « jeton » (le recovery des paires
+        # « jeton » mesure surtout l'identité du dernier jeton)
+        for d in ("informative_context", "informative_token"):
+            sub = [r for r in info if r.pair_detail == d]
+            out[f"n_{d}"] = len(sub)
+            out[f"median_recovery_multistep_{d}"] = median([r.recovery_multistep for r in sub])
+            out[f"median_recovery_loglik_{d}"] = median([r.recovery_loglik for r in sub])
+        return out
 
     def analyze_prompt(
         self,
@@ -1064,6 +1710,7 @@ class TrajectoryBifurcationEngine:
             "t_patch_used": t_patch,
             "bifurcation_js": bif_js,
             "bifurcation_residual": bif_res,
+            "corr_js_divergence_jetons": div["corr_js_divergence_jetons"],
             "mean_entropy": float(np.mean(div["entropy_mean"])),
             **self.summarize_patches(patch_results),
         }
@@ -1083,6 +1730,47 @@ class TrajectoryBifurcationEngine:
             frac_pairs_same_prefix=div["frac_pairs_same_prefix"],
         )
 
+    def cartographier(
+        self,
+        prompts: Sequence[str],
+        n: int = 192,
+        n_steps: int = 32,
+        layer: Optional[int] = None,
+        t_valeur: Optional[int] = None,
+        seed_base: Optional[int] = None,
+        npc: int = 10,
+        seed_analyse: int = 0,
+    ) -> Dict[str, Any]:
+        """Point d'entrée pour l'atlas : un ensemble par prompt, puis, sur la représentation R_h (moyenne des états de la
+        couche `layer` après lecture des jetons générés ; défaut : couche ⌊2L/3⌋ − 1, soit hidden_states[⌊2L/3⌋] de B2) :
+        régimes (test, calibration, puissance, verdict de B2), et pour chaque prompt multimodal la bifurcation par
+        préfixe et la valeur ajoutée de l'état à t_valeur sur un lecteur de jetons (étiquettes = régimes de la suite après
+        t_valeur, définis sur les jetons futurs pour ne pas avantager les états). Renvoie des données sérialisables."""
+        layer = (2 * self.num_layers) // 3 - 1 if layer is None else layer
+        t_valeur = n_steps // 4 if t_valeur is None else t_valeur
+        ens = self.generer_ensemble(prompts, n, n_steps, seed_base=seed_base, layers=[layer], keep_steps=True,
+                                    mean_layers=[layer], steps_to_keep=[t_valeur])
+        R = [ens.hidden_mean[layer][ens.lignes_du_prompt(p)] for p in range(len(prompts))]
+        reg = analyser_regimes(R, seed=seed_analyse, npc=npc)
+        fiches = []
+        for p in range(len(prompts)):
+            li = ens.lignes_du_prompt(p)
+            f = {"prompt": prompts[p], "multimodal": bool(reg["multimodal"][p]), "dip": reg["dip"][p], "p": reg["p"][p],
+                 "suites_distinctes": len({tuple(r) for r in ens.tokens[li]}) / len(li),
+                 "entropie_moyenne": float(ens.entropy_tsallis[li].mean())}
+            if f["multimodal"]:
+                lab = etiquettes_regimes(R[p], seed_analyse, npc)
+                f["bifurcation"] = bifurcation_prefixe(ens.tokens[li], lab, ens.entropy_tsallis[li], seed_analyse)
+                fut = etiquettes_regimes(sac_de_jetons([r[t_valeur + 1:] for r in ens.tokens[li]]), seed_analyse, npc)
+                f["valeur_ajoutee"] = valeur_ajoutee_sur_jetons(
+                    ens.hidden_steps[layer][li, 0].astype(np.float32), [r[:t_valeur] for r in ens.tokens[li]], fut,
+                    seed=seed_analyse)
+            fiches.append(f)
+        return {"couche": layer, "t_valeur": t_valeur, "regimes": {k: v for k, v in reg.items()
+                                                                  if k in ("pi", "pi_ci", "n_multi", "nul", "puissance",
+                                                                           "verdict")},
+                "fiches": fiches}
+
 
 if __name__ == "__main__":
     import argparse
@@ -1095,6 +1783,8 @@ if __name__ == "__main__":
     parser.add_argument("--max-new-tokens", type=int, default=48)
     parser.add_argument("--n-patch-pairs", type=int, default=4)
     parser.add_argument("--seed", type=int, default=0)
+    parser.add_argument("--sampler", default="gumbel", choices=["gumbel", "multinomial"])
+    parser.add_argument("--temperature", type=float, default=0.6)
     parser.add_argument(
         "--no-thinking",
         action="store_true",
@@ -1111,6 +1801,8 @@ if __name__ == "__main__":
         model_name=args.model,
         max_new_tokens=args.max_new_tokens,
         seed=args.seed,
+        sampler=args.sampler,
+        temperature=args.temperature,
     )
     result = engine.analyze_prompt(
         args.prompt,
@@ -1123,7 +1815,7 @@ if __name__ == "__main__":
     )
     print(json.dumps(result.summary, indent=2, ensure_ascii=False, default=str))
     for r in result.patch_results:
-        kind = r.pair_kind
+        kind = r.pair_detail
         fmt = lambda v: "n/a" if v is None else f"{v:+.2f}"
         print(
             f"[{kind}] {r.source_traj_idx}→{r.target_traj_idx} "

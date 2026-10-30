@@ -1,4 +1,5 @@
-# Tests du moteur sur un petit Qwen3 à poids aléatoires (CPU, quelques secondes).
+# Tests du moteur sur un petit Qwen3 à poids aléatoires (CPU, quelques secondes),
+# pour les deux échantillonneurs (« gumbel », défaut v0.2, et « multinomial », v0.1.x).
 # Seul le tokenizer de Qwen/Qwen3-0.6B est téléchargé (~11 Mo, une fois).
 
 import math
@@ -15,8 +16,8 @@ from trajectory_bifurcation_core import TrajectoryBifurcationEngine  # noqa: E40
 transformers = pytest.importorskip("transformers")
 
 
-@pytest.fixture(scope="module")
-def engine():
+@pytest.fixture(scope="module", params=["gumbel", "multinomial"])
+def engine(request):
     try:
         tok = transformers.AutoTokenizer.from_pretrained("Qwen/Qwen3-0.6B")
     except Exception as e:  # pas de réseau ni de cache
@@ -44,6 +45,8 @@ def engine():
         temperature=1.0,
         top_p=0.95,
         topk_for_divergence=64,
+        sampler=request.param,
+        chat=True,
     )
 
 

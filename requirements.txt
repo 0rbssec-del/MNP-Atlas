@@ -4,3 +4,5 @@ numpy
 tqdm
 packaging
 pytest
+scikit-learn
+diptest
