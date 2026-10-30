@@ -21,8 +21,9 @@ reste disponible ; les deux expériences du dépôt fixent explicitement leurs a
 
 Pourquoi Gumbel : avec une graine par (ligne, position), deux branches qui partagent un préfixe reçoivent le même
 bruit à chaque position (nombres aléatoires communs). Un témoin négatif est alors identique à l'arrondi près des logits,
-au lieu de dépendre de la position d'un seuil cumulé dans `torch.multinomial` (cause probable du témoin négatif à
-recouvrement 0 de `resultats_multi_prompt.json`).
+au lieu de dépendre de la position d'un seuil cumulé dans `torch.multinomial`. (Le témoin négatif à recouvrement 0 de
+`resultats_multi_prompt.json` n'en est pas un exemple : ses jetons ne divergent pas, `first_divergence_step` = None ;
+le 0 venait du Jaccard d'une continuation vide, fin de texte immédiate, corrigé dans `bdec38e`.)
 
 ## 2. Démarrage
 
