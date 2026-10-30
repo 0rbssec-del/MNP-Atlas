@@ -40,7 +40,11 @@ réflexion), longueur fixe, et paires informatives scindées en « contexte » e
 
   - `multi_prompt.py` (protocole `v015`), premier run publié (« Raconte une histoire courte. », réflexion ON) :
     t* = 7, t_patch = 8, corrélation C1, 24 paires × 10 champs et 8 témoins nuls **identiques**, flottants compris.
-  - `replication_akarlar.py` (protocole `akarlar`, bf16), pool du prompt 20 : comparaison en cours.
+  - `replication_akarlar.py` (protocole `akarlar`, bf16), prompt 20 : 20 textes de découverte et 26 runs du pool
+    (texte, étiquettes, premier jeton, tirages de complément) **identiques**.
+  - `multi_prompt.py --protocole sgz` sur Qwen/Qwen3-0.6B-Base, un prompt (essai de bout en bout, pas un résultat) :
+    Gumbel, prompt brut, longueur fixe (48 jetons), 12 paires « contexte » et 16 « jeton », témoin négatif à
+    recouvrement 1,0 ; 2 min 30 sur 4 cœurs.
 
 ## Note sur MOTEUR_V02.md
 
