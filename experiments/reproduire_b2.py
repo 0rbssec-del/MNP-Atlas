@@ -5,15 +5,20 @@
 # Compare ensuite, prompt par prompt, la décision « multimodal » à celle publiée par B2.
 #
 # Usage (GPU, Internet) : python experiments/reproduire_b2.py --model Qwen/Qwen3-1.7B-Base --out b2_qwen.json
+# Deux modèles en même temps, un par GPU (Kaggle T4 × 2) : un processus par modèle, sorties reproduction_b2_<modèle>.json
+#   python experiments/reproduire_b2.py --model Qwen/Qwen3-1.7B-Base HuggingFaceTB/SmolLM3-3B-Base
 # Durée : ~15 min (Qwen3-1.7B) ou ~20 min (SmolLM3-3B) sur une T4 [estimation].
 
 import argparse
 import json
+import os
+import subprocess
 import sys
 import time
 from pathlib import Path
 
 import numpy as np
+import torch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from trajectory_bifurcation_core import TrajectoryBifurcationEngine, analyser_regimes  # noqa: E402
@@ -57,11 +62,15 @@ B2_MULTIMODAUX = {"Qwen3-1.7B-Base": [8, 21, 30, 33, 35, 36, 38, 42, 51, 52, 61,
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--model", default="Qwen/Qwen3-1.7B-Base")
+    ap.add_argument("--model", nargs="+", default=["Qwen/Qwen3-1.7B-Base"])
     ap.add_argument("--n", type=int, default=192)
     ap.add_argument("--steps", type=int, default=32)
     ap.add_argument("--out", default="reproduction_b2.json")
     args = ap.parse_args()
+    if len(args.model) > 1:
+        lancer_en_parallele(args)
+        return
+    args.model = args.model[0]
 
     eng = TrajectoryBifurcationEngine.sgz(args.model, max_new_tokens=args.steps, seed=SEED)
     if eng.tokenizer.pad_token_id is None:                  # comme B2 : remplissage par la fin de texte
@@ -92,6 +101,28 @@ def main():
               f"(64/64 attendu avec les mêmes versions de torch et transformers ; un écart de quelques prompts peut venir "
               f"d'arrondis fp16 sur une autre plateforme)")
     Path(args.out).write_text(json.dumps(out, indent=1, ensure_ascii=False, default=float))
+
+
+def lancer_en_parallele(args):
+    """Un processus par modèle, chacun ne voyant qu'un GPU (CUDA_VISIBLE_DEVICES) ; mêmes calculs qu'un par un."""
+    n_gpu = torch.cuda.device_count()
+    lot = max(n_gpu, 1)                                     # sans GPU : un modèle à la fois
+    procs, codes = [], []
+    for i, m in enumerate(args.model):
+        env = dict(os.environ)
+        if n_gpu:
+            env["CUDA_VISIBLE_DEVICES"] = str(i % n_gpu)
+        out = str(Path(args.out).with_name(f"{Path(args.out).stem}_{m.split('/')[-1]}.json"))
+        cmd = [sys.executable, str(Path(__file__).resolve()), "--model", m, "--n", str(args.n), "--steps", str(args.steps),
+               "--out", out]
+        print(f"[PARALLÈLE] {m} → GPU {env.get('CUDA_VISIBLE_DEVICES', 'aucun')} ; sortie {out}", flush=True)
+        procs.append(subprocess.Popen(cmd, env=env))
+        if len(procs) == lot:                               # plus de modèles que de GPU : on attend que les GPU se libèrent
+            codes += [p.wait() for p in procs]
+            procs = []
+    codes += [p.wait() for p in procs]
+    if any(codes):
+        raise SystemExit(f"un des processus a échoué (codes {codes})")
 
 
 if __name__ == "__main__":

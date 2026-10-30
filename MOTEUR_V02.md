@@ -81,7 +81,9 @@ dynamique interne.
 ## 5. Reproduire B2
 
 `python experiments/reproduire_b2.py --model Qwen/Qwen3-1.7B-Base` (puis `HuggingFaceTB/SmolLM3-3B-Base`) regénère B2
-à T = 0,6 avec le moteur et compare la décision « multimodal » de chaque prompt à celle publiée. L'échantillonneur est
+à T = 0,6 avec le moteur et compare la décision « multimodal » de chaque prompt à celle publiée. Avec deux GPU,
+`--model Qwen/Qwen3-1.7B-Base HuggingFaceTB/SmolLM3-3B-Base` lance un processus par modèle, chacun sur son GPU, en même
+temps (sorties `reproduction_b2_<modèle>.json`). L'échantillonneur est
 vérifié identique, jeton pour jeton, à `Gen.sample` des notebooks SGZ (`tests/test_v02.py`) ; sur une autre plateforme,
 des arrondis fp16 peuvent faire basculer quelques prompts.
 
