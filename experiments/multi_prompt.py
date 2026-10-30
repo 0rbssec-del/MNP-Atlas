@@ -14,7 +14,14 @@
 #   Contrôles mécaniques : témoins positifs recovery_per_step[0] ~ 1 ;
 #   témoins négatifs overlap = 1.
 #
+# Protocoles (atlas/compat.py) :
+#   v015 (défaut) : réglages de resultats_multi_prompt.json (multinomial,
+#                   T = 0,8, top-p 0,95, gabarit de chat, réflexion on/off) ;
+#   sgz           : protocole du moteur v0.2 (Gumbel, T = 0,6, prompt brut,
+#                   modèle de base) ; paires « contexte » et « jeton » séparées.
+#
 # Usage : python experiments/multi_prompt.py --out resultats.json
+#         python experiments/multi_prompt.py --protocole sgz --out resultats_sgz.json
 
 import argparse
 import json
@@ -25,7 +32,12 @@ from pathlib import Path
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from trajectory_bifurcation_core import TrajectoryBifurcationEngine  # noqa: E402
+from atlas.compat import (  # noqa: E402
+    PROTOCOLES,
+    construire_moteur,
+    paires_du_type,
+    resume_paire,
+)
 
 PROMPTS = [
     "Raconte une histoire courte.",
@@ -40,17 +52,13 @@ PROMPTS = [
 
 
 def run_one(engine, prompt, thinking, args, rng):
-    kwargs = {"enable_thinking": thinking}
+    # thinking = None : prompt brut (protocole sgz)
+    kwargs = None if thinking is None else {"enable_thinking": thinking}
     trajs = engine.generate_ensemble(
         prompt, args.n, chat_template_kwargs=kwargs, seed=args.seed
     )
     div = engine.compute_divergences(trajs)
-    js, frac = div["js_over_time"], div["frac_pairs_same_prefix"]
-    corr = (
-        float(np.corrcoef(js, 1 - frac)[0, 1])
-        if np.std(js) > 0 and np.std(frac) > 0
-        else None
-    )
+    corr = div["corr_js_divergence_jetons"]
     bif = engine.detect_bifurcation(div, measure="js")
     t_star = bif["t_star"]
     t_patch = engine.choose_patch_time(
@@ -79,22 +87,9 @@ def run_one(engine, prompt, thinking, args, rng):
             n_controls=1,
             max_continuation_tokens=args.cont,
             forced_horizon=args.horizon,
+            detail=args.detail,
         )
-        out["layers"][layer] = [
-            {
-                "kind": r.pair_kind,
-                "src": r.source_traj_idx,
-                "tgt": r.target_traj_idx,
-                "first_diff_step": r.first_diff_step,
-                "last_token_same": r.last_token_same,
-                "recovery": r.recovery,
-                "recovery_step0": (r.recovery_per_step or [None])[0],
-                "recovery_multistep": r.recovery_multistep,
-                "recovery_loglik": r.recovery_loglik,
-                "overlap": r.final_token_overlap,
-            }
-            for r in results
-        ]
+        out["layers"][layer] = [resume_paire(r) for r in results]
 
     # Témoins nuls à la couche du milieu, sur les paires informatives
     layer = args.layers[len(args.layers) // 2]
@@ -127,11 +122,16 @@ def median(values):
     return float(np.median(values)) if values else None
 
 
+MODES = {True: "réflexion ON", False: "réflexion OFF", None: "prompt brut (sgz)"}
+ETIQUETTES = {True: "ON ", False: "OFF", None: "BRUT"}
+
+
 def report(runs, layers):
     print("\n=========== RÉSULTATS ===========")
-    for thinking in (True, False):
+    for thinking, label in MODES.items():
         rs = [r for r in runs if r["thinking"] == thinking]
-        label = "réflexion ON" if thinking else "réflexion OFF"
+        if not rs:
+            continue
         corrs = [r["corr_js_divergence_tokens"] for r in rs]
         valid = [c for c in corrs if c is not None]
         print(f"\n--- {label} ({len(rs)} runs) ---")
@@ -173,15 +173,13 @@ def report(runs, layers):
                 f"max={max(per_run, default=None)} "
                 f"| C4 dans [0.1,0.9] : {mid}/{len(ms)}"
             )
-            # Exploratoire : dernier token identique (contexte seul) ou non
-            for same in (True, False):
-                sub = [p["recovery_multistep"] for p in pairs
-                       if p["last_token_same"] is same
-                       and p["recovery_multistep"] is not None]
-                sub0 = [p["recovery"] for p in pairs
-                        if p["last_token_same"] is same]
-                print(f"      dernier token {'identique' if same else 'différent'} : "
-                      f"n={len(sub)} 1er pas méd={median(sub0)} multi-pas méd={median(sub)}")
+            # Dernier token identique (contexte seul) ou différent (jeton)
+            for detail, nom in (("informative_context", "identique"),
+                                ("informative_token", "différent")):
+                sub = paires_du_type(pairs, detail)
+                print(f"      dernier token {nom} : n={len(sub)} "
+                      f"1er pas méd={median([p['recovery'] for p in sub])} "
+                      f"multi-pas méd={median([p['recovery_multistep'] for p in sub])}")
         for name in ("aleatoire_meme_norme", "source_8_pas_avant"):
             vals = [n["recovery_multistep"] for r in rs for n in r["nulls"]
                     if n["type"] == name]
@@ -197,7 +195,9 @@ def report(runs, layers):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--model", default="Qwen/Qwen3-0.6B")
+    ap.add_argument("--protocole", default="v015", choices=["v015", "sgz"])
+    ap.add_argument("--model", default=None,
+                    help="défaut : le modèle du protocole (atlas/compat.py)")
     ap.add_argument("--n", type=int, default=8)
     ap.add_argument("--max-new-tokens", type=int, default=48)
     ap.add_argument("--n-pairs", type=int, default=4)
@@ -210,14 +210,17 @@ def main():
     ap.add_argument("--out", default="resultats_multi_prompt.json")
     args = ap.parse_args()
 
-    engine = TrajectoryBifurcationEngine(
-        model_name=args.model,
+    engine = construire_moteur(
+        args.protocole,
+        model_name=args.model or PROTOCOLES[args.protocole]["modele"],
         max_new_tokens=args.max_new_tokens,
         seed=args.seed,
         layers_to_track=sorted(set(args.layers)),
     )
+    # v015 garde la sélection de paires de v0.1.5 (pour refaire ses chiffres)
+    args.detail = args.protocole == "sgz"
     rng = np.random.default_rng(args.seed)
-    modes = [m == "on" for m in args.modes.split(",")]
+    modes = [None] if not engine.chat else [m == "on" for m in args.modes.split(",")]
     runs = []
     for thinking in modes:
         for prompt in PROMPTS[: args.n_prompts]:
@@ -225,7 +228,7 @@ def main():
             runs.append(run_one(engine, prompt, thinking, args, rng))
             r = runs[-1]
             print(
-                f"[{'ON ' if thinking else 'OFF'}] {prompt[:40]:40s} "
+                f"[{ETIQUETTES[thinking]}] {prompt[:40]:40s} "
                 f"t*={r['t_star']} t_patch={r['t_patch']} "
                 f"corr={r['corr_js_divergence_tokens']} ({time.time() - t0:.0f}s)",
                 flush=True,

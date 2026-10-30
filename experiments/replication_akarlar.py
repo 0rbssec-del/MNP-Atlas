@@ -42,11 +42,19 @@ import torch
 import torch.nn.functional as F
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from trajectory_bifurcation_core import TrajectoryBifurcationEngine  # noqa: E402
+from atlas.compat import (  # noqa: E402
+    PROTOCOLES,
+    capture_hooks,
+    construire_moteur,
+    generateur,
+    generer_trajectoire,
+    js_exacte,
+    patch_hook,
+)
 
 MAX_GEN = 15
 MAX_GEN_DISCOVERY = 30
-TEMPERATURE = 0.7
+TEMPERATURE = PROTOCOLES["akarlar"]["moteur"]["temperature"]   # 0,7, comme leur code
 LAYER_SWEEP = [0, 3, 6, 9, 12, 15, 18, 21, 24, 27]
 # Leur tableau 3 (N = 20, 30 tokens) : correct / halluciné / autre
 THEIR_COUNTS = {
@@ -129,13 +137,13 @@ def spearman(x, y):
 class Replication:
     def __init__(self, args):
         self.args = args
-        self.engine = TrajectoryBifurcationEngine(
+        # Protocole « akarlar » : torch.multinomial, T = 0,7, sans top-p, prompt brut
+        self.engine = construire_moteur(
+            "akarlar",
             model_name=args.model,
             torch_dtype=getattr(torch, args.dtype),
             layers_to_track=None,
             max_new_tokens=MAX_GEN,
-            temperature=TEMPERATURE,
-            top_p=1.0,
             seed=args.seed,
         )
         self.tok = self.engine.tokenizer
@@ -163,7 +171,7 @@ class Replication:
             self.engine.layers_to_track = []
         self.engine.max_new_tokens = max_gen
         try:
-            traj = self.engine._generate_one_trajectory(prompt_ids, seed=seed)
+            traj = generer_trajectoire(self.engine, prompt_ids, seed)
         finally:
             self.engine.layers_to_track = layers
             self.engine.max_new_tokens = MAX_GEN
@@ -180,12 +188,12 @@ class Replication:
     def their_patch_generation(self, prompt_ids, vector, layer, patch_step, seed):
         """Portage littéral de generate_with_patch : pas de cache, patch de la
         dernière position à un seul passage (pas `patch_step`)."""
-        gen = self.engine._make_generator(seed)
+        gen = generateur(self.engine, seed)
         ids = prompt_ids.clone()
         out = []
         for step in range(MAX_GEN):
             if step == patch_step:
-                with self.engine._patch_hook(layer, ids.shape[1] - 1, vector):
+                with patch_hook(self.engine, layer, ids.shape[1] - 1, vector):
                     logits = self.model(input_ids=ids, use_cache=False).logits
             else:
                 logits = self.model(input_ids=ids, use_cache=False).logits
@@ -288,7 +296,7 @@ class Replication:
                 continue
             for name, src in (("H->C", c[0]), ("C->H", h[0])):
                 src_ids = torch.cat([ids, torch.tensor([[src["t0"]]])], 1)
-                with self.engine._capture_hooks(layers) as cap:
+                with capture_hooks(self.engine, layers) as cap:
                     lg = self.model(input_ids=src_ids, use_cache=False).logits
                 p_src = F.softmax(lg[0, -1].double(), -1)
                 states = {l: cap[l].clone() for l in layers}
@@ -297,16 +305,16 @@ class Replication:
                 for t0 in fresh:
                     tgt_ids = torch.cat([ids, torch.tensor([[t0]])], 1)
                     p_tgt = F.softmax(self.model(input_ids=tgt_ids).logits[0, -1].double(), -1)
-                    before = float(self.engine._js_rows(p_tgt[None], p_src[None])[0])
+                    before = float(js_exacte(p_tgt[None], p_src[None])[0])
                     for layer in layers:
                         vec = states[layer]
-                        with self.engine._patch_hook(layer, tgt_ids.shape[1] - 1, vec):
+                        with patch_hook(self.engine, layer, tgt_ids.shape[1] - 1, vec):
                             lg = self.model(input_ids=tgt_ids, use_cache=False).logits
                         p_pat = F.softmax(lg[0, -1].double(), -1)
                         rows.append({
                             "idx": p["idx"], "direction": name, "t0": t0,
                             "layer": layer, "js_before": before,
-                            "js_after": float(self.engine._js_rows(p_pat[None], p_src[None])[0]),
+                            "js_after": float(js_exacte(p_pat[None], p_src[None])[0]),
                         })
             print(f"[P1] {p['idx']:2d} fait", flush=True)
         self.results["p1"] = rows
@@ -349,7 +357,7 @@ class Replication:
                 if patch is None:
                     lg = self.model(input_ids=ids, use_cache=False).logits
                 else:
-                    with self.engine._patch_hook(*patch):
+                    with patch_hook(self.engine, *patch):
                         lg = self.model(input_ids=ids, use_cache=False).logits
             return F.log_softmax(lg[0, pos: pos + k].double(), -1)
 
@@ -362,7 +370,7 @@ class Replication:
             vec = torch.from_numpy(src.hidden_states[layer][1])
             lp_p = logp(base_t, (layer, pos, vec))
             ll_p = lp_p.gather(1, tok).squeeze(1)
-            js0 = float(self.engine._js_rows(lp_p[:1].exp(), lp_s[:1].exp())[0])
+            js0 = float(js_exacte(lp_p[:1].exp(), lp_s[:1].exp())[0])
             row = {"layer": layer, "js_step0_patched_source": js0}
             for name, sl in (("all", slice(0, k)), ("after", slice(1, k))):
                 den = float(ll_s[sl].sum() - ll_c[sl].sum())
@@ -382,7 +390,7 @@ class Replication:
                 for name, src, tgt in (("H->C", c[i], h[i]), ("C->H", h[i], c[i])):
                     if len(src.generated_ids) < 3 or len(tgt.generated_ids) < 2:
                         continue
-                    kind = TrajectoryBifurcationEngine.classify_pair(src, tgt, 1)
+                    kind = self.engine.classify_pair(src, tgt, 1)
                     for row in self.forced_profile(src, tgt):
                         det.append(dict(row, idx=p["idx"], direction=name,
                                         pair=i, pair_kind=kind))
