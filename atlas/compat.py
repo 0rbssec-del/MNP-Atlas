@@ -12,11 +12,14 @@
 from __future__ import annotations
 
 import inspect
+import re
 from typing import Any, Dict, List, Optional, Sequence
 
 import torch
 
+import trajectory_bifurcation_core as _core
 from trajectory_bifurcation_core import (
+    BifurcationResult,
     PatchResult,
     Trajectory,
     TrajectoryBifurcationEngine,
@@ -55,6 +58,34 @@ METHODES_REQUISES = (
     "forced_patch_effect", "continue_from_prefix", "classify_pair",
     "classify_pair_detail",
 )
+
+
+def version_moteur() -> str:
+    """Version écrite en tête du moteur (« Core vX.Y.Z »), ou « inconnue »."""
+    try:
+        with open(_core.__file__, encoding="utf-8") as f:
+            tete = f.read(400)
+    except OSError:
+        return "inconnue"
+    m = re.search(r"Core v(\d+(?:\.\d+)+)", tete)
+    return m.group(1) if m else "inconnue"
+
+
+def reglages_moteur(moteur) -> Dict[str, Any]:
+    """Réglages qui déterminent les tirages (provenance d'une entrée d'atlas)."""
+    return {
+        "protocole": getattr(moteur, "protocole_atlas", None),
+        "modele": moteur.model_name,
+        "sampler": moteur.sampler,
+        "temperature": moteur.temperature,
+        "top_p": moteur.top_p,
+        "chat": moteur.chat,
+        "seed": moteur.seed,
+        "max_new_tokens": moteur.max_new_tokens,
+        "min_js_den": moteur.MIN_JS_DEN,
+        "min_ll_den": moteur.MIN_LL_DEN,
+        "core_version": version_moteur(),
+    }
 
 
 def verifier_moteur(cls=TrajectoryBifurcationEngine) -> None:
@@ -137,6 +168,24 @@ def resume_paire(r: PatchResult) -> Dict[str, Any]:
     }
 
 
+def type_detaille(p: PatchResult) -> str:
+    """Type détaillé d'une paire : témoins, informative_context ou informative_token.
+
+    Un PatchResult picklé avant la v0.2 n'a pas pair_detail (la valeur par défaut
+    de la classe, « informative_token », serait fausse) : on le déduit de
+    last_token_same, ou on renvoie « informative » si ce champ manque aussi.
+    """
+    if p.pair_kind != "informative":
+        return p.pair_kind
+    champs = vars(p)
+    if champs.get("pair_detail") is not None:
+        return champs["pair_detail"]
+    same = champs.get("last_token_same")
+    if same is None:
+        return "informative"
+    return "informative_context" if same else "informative_token"
+
+
 def paires_du_type(paires: List[Dict[str, Any]], detail: str) -> List[Dict[str, Any]]:
     """Paires d'un type détaillé (informative_context, informative_token…).
 
@@ -148,3 +197,11 @@ def paires_du_type(paires: List[Dict[str, Any]], detail: str) -> List[Dict[str, 
             return p.get("detail", p["kind"])
         return "informative_context" if p.get("last_token_same") else "informative_token"
     return [p for p in paires if det(p) == detail]
+
+
+__all__ = [
+    "PROTOCOLES", "BifurcationResult", "PatchResult", "Trajectory", "TrajectoryBifurcationEngine",
+    "version_moteur", "reglages_moteur", "verifier_moteur", "construire_moteur",
+    "capture_hooks", "patch_hook", "js_exacte", "generateur", "generer_trajectoire",
+    "resume_paire", "type_detaille", "paires_du_type",
+]
