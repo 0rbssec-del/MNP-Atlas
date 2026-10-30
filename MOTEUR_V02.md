@@ -74,10 +74,12 @@ dynamique interne.
 - `rejouer_moyennes(contextes, suites, couches)` : passe complète, moyenne des états sur la suite (R_h exact de B2).
 - `reversibility_analysis(..., detail=True)` : paires « contexte » et « jeton » séparées ; `summarize_patches` donne les
   médianes de chaque type.
-- `cartographier(prompts, n, n_steps, layer, t_valeur)` : point d'entrée de l'atlas ; renvoie un dictionnaire
-  sérialisable `{couche, t_valeur, regimes: {pi, pi_ci, n_multi, nul, puissance, verdict}, fiches: [...]}`, une fiche
-  par prompt (`multimodal`, `dip`, `p`, `suites_distinctes`, `entropie_moyenne`, et pour les prompts multimodaux
-  `bifurcation` et `valeur_ajoutee`).
+- `cartographier(prompts, n, n_steps, layer, t_valeur, rejouer=False)` : point d'entrée de l'atlas ; renvoie un
+  dictionnaire sérialisable `{couche, t_valeur, n, n_steps, npc, seed_base, seed_analyse, representation, regimes: {pi,
+  pi_ci, n_multi, nul, puissance, verdict}, fiches: [...]}`, une fiche par prompt (`multimodal`, `dip`, `p`,
+  `suites_distinctes`, `entropie_moyenne`, et pour les prompts multimodaux `bifurcation` et `valeur_ajoutee`).
+  v0.2.1 : `rejouer=True` calcule R_h par une passe rejouée (exactement la représentation de B2) ; `t_valeur` doit
+  laisser un jeton avant et deux après.
 
 ## 5. Reproduire B2
 
@@ -95,7 +97,8 @@ réglages (T, top-p, gabarit) : relancées, elles refont les mêmes tirages qu'e
 
 ## 7. Tests
 
-`python -m pytest -q tests` : 45 tests (les 15 de v0.1.5, chacun avec les deux échantillonneurs, et 15 nouveaux).
+`python -m pytest -q tests` : 46 tests du moteur (29 dans `test_trajectory_bifurcation_core.py`, les tests de v0.1.5
+avec les deux échantillonneurs ; 17 dans `test_v02.py`), plus les 31 de l'atlas.
 Seul le tokenizer de `Qwen/Qwen3-0.6B` est téléchargé.
 
 ## 8. Limites connues

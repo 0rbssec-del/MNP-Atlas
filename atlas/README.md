@@ -1,13 +1,45 @@
 # Code atlas et moteur v0.2
 
+## Atlas v0.4 : cartes de l'espace caché
+
+L'atlas v0.3 indexait les mesures v0.1 (t* JS, `has_bifurcation`, recovery au premier pas). Les résultats SGZ et la
+réplication d'Akarlar montrent qu'elles suivent la divergence des jetons (C1 : 16 runs sur 16) et l'identité du dernier
+jeton, pas une structure interne. La v0.4 fait des **cartes de l'espace caché** le type d'entrée principal et garde les
+entrées v0.1 comme historiques (API et valeurs inchangées).
+
+| | |
+|---|---|
+| Construire | `atlas.cartographier("sgz", prompts, moteur_kwargs=..., n=192, n_steps=32, rejouer=True)` (ou un moteur déjà construit) : `cartographier` du moteur (core ≥ 0.2.1), provenance complète |
+| Une carte | régimes de B2 sur R_h (test par moitiés, substitut gaussien, mélanges, BH, verdict) ; une fiche par prompt : `multimodal`, `dip`, `p`, `suites_distinctes`, `entropie_moyenne` ; pour un prompt multimodal, `bifurcation` (préfixe) et `valeur_ajoutee` (état au pas `t_valeur` contre un lecteur de jetons) |
+| Interroger | `fiches(i, multimodal=, verdict_valeur=)`, `signature(i, prompt)` (NaN si absent ; non testé ≠ « aucune »), `matrice_signatures(i)`, `resume_carte(i)` |
+| Comparer | `accord_cartes(i, j)` : prompts multimodaux partagés, attendu par hasard, p hypergéométrique, Jaccard (B2 après coup : 5 partagés, p = 0,009) ; comparabilité sans le modèle ni la couche |
+| Stocker | `atlas_cartes.json` (JSON seul) à côté de `atlas_meta.json` et `atlas_data.pkl` ; `exporter_carte` / `importer_carte` pour des cartes faites dans des processus séparés |
+| Kaggle | `experiments/construire_atlas.py --model Qwen/Qwen3-1.7B-Base HuggingFaceTB/SmolLM3-3B-Base` : un modèle par GPU, carte des 64 prompts de B2 au protocole de B2, contrôle 64/64 contre B2, atlas fusionné, accord entre modèles. Remplace `reproduire_b2.py` |
+
+**Comparabilité à trois états** (`compare_entries`, `accord_cartes`) : `True` si tous les réglages coïncident,
+`False` si l'un diffère (`differences`), `None` si l'un manque (`inconnus`). Réglages comparés : modèle,
+échantillonneur, T, top-p, gabarit, jetons spéciaux, **précision de calcul**, seuils de recovery, top-k et
+**arguments d'analyse** (réflexion on/off) pour les entrées historiques ; q, couche, `t_valeur`, n, pas, ACP et
+représentation pour les cartes. Corrige deux défauts de v0.3 : deux entrées réflexion ON et OFF, ou à seuils de recovery
+différents, étaient « comparables » ; la précision de calcul n'était pas enregistrée. Une provenance v0.3 donne donc
+`None` (précision inconnue) là où v0.3 répondait `True`.
+
+**Provenance** (`reglages_moteur`) : ajoute précision de calcul, matériel, jetons spéciaux, q, top-k, couches, taille
+de lot, nombre de couches, versions de torch et transformers.
+
+**Limites.** La carte ne garde que des résumés par prompt (pas les états) ; la valeur ajoutée a besoin d'au moins 5
+trajectoires par régime (sinon NON TESTABLE) ; les étiquettes de régime futur sont définies sur les jetons futurs
+(prudent, voir `MOTEUR_V02.md`) ; `accord_cartes` suppose les prompts échangeables (même p que l'analyse après coup de B2).
+
 ## Séparation
 
 | Partie | Fichiers | Règle |
 |---|---|---|
-| Moteur | `trajectory_bifurcation_core.py`, `MOTEUR_V02.md`, `tests/test_v02.py`, `tests/test_trajectory_bifurcation_core.py`, `experiments/reproduire_b2.py` | Livré tel quel (commit `d900d27`) ; le code atlas ne le modifie pas. |
+| Moteur | `trajectory_bifurcation_core.py`, `MOTEUR_V02.md`, `tests/test_v02.py`, `tests/test_trajectory_bifurcation_core.py`, `experiments/reproduire_b2.py` | Livré par la session moteur (v0.2.0, commit `d900d27` ; v0.2.1 avec l'atlas v0.4 : `cartographier(rejouer=…)` et réglages renvoyés avec la carte) ; le code atlas ne le modifie pas. |
 | Couche atlas | `atlas/compat.py` | Seul point de contact avec le moteur : protocoles figés, accès aux méthodes internes, garde de version. |
 | Expériences atlas | `experiments/multi_prompt.py`, `experiments/replication_akarlar.py` | Construisent leur moteur avec `construire_moteur(protocole, ...)` et n'appellent aucune méthode interne directement. |
-| Atlas des résultats | `atlas/bifurcation_atlas.py` (raccourci : `bifurcation_atlas.py`) | Stocke et compare des `BifurcationResult` ; types, version et réglages du moteur lus via `atlas/compat.py`. |
+| Atlas des résultats | `atlas/bifurcation_atlas.py` (raccourci : `bifurcation_atlas.py`) | v0.4 : cartes de l'espace caché, et `BifurcationResult` historiques ; types, version et réglages du moteur lus via `atlas/compat.py`. |
+| Expérience atlas v0.4 | `experiments/construire_atlas.py`, `tests/test_atlas_v04.py` | Première carte (64 prompts de B2, deux modèles) ; 9 tests. |
 
 Si le moteur change d'API, seul `atlas/compat.py` doit suivre ; `verifier_moteur()` refuse un moteur sans l'API v0.2
 avec la liste de ce qui manque.

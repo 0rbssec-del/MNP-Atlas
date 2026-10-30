@@ -1,5 +1,5 @@
 # trajectory_bifurcation_core.py
-# Core v0.2.0 – Trajectory Bifurcation Engine
+# Core v0.2.1 – Trajectory Bifurcation Engine
 # Fonctionnalités :
 #   - Génération d'ensembles de trajectoires à prompt fixe, par lots (remplissage
 #     à gauche, KV-cache), avec deux échantillonneurs :
@@ -1740,17 +1740,28 @@ class TrajectoryBifurcationEngine:
         seed_base: Optional[int] = None,
         npc: int = 10,
         seed_analyse: int = 0,
+        rejouer: bool = False,
     ) -> Dict[str, Any]:
         """Point d'entrée pour l'atlas : un ensemble par prompt, puis, sur la représentation R_h (moyenne des états de la
         couche `layer` après lecture des jetons générés ; défaut : couche ⌊2L/3⌋ − 1, soit hidden_states[⌊2L/3⌋] de B2) :
         régimes (test, calibration, puissance, verdict de B2), et pour chaque prompt multimodal la bifurcation par
         préfixe et la valeur ajoutée de l'état à t_valeur sur un lecteur de jetons (étiquettes = régimes de la suite après
-        t_valeur, définis sur les jetons futurs pour ne pas avantager les états). Renvoie des données sérialisables."""
+        t_valeur, définis sur les jetons futurs pour ne pas avantager les états). Renvoie des données sérialisables.
+
+        rejouer : R_h par une passe complète sur prompt + suite (rejouer_moyennes, exactement la représentation de B2)
+        au lieu de la moyenne accumulée pendant la génération (mêmes positions, KV-cache : arrondis fp16 un peu
+        différents). Les réglages qui fixent le résultat sont renvoyés avec la carte."""
         layer = (2 * self.num_layers) // 3 - 1 if layer is None else layer
         t_valeur = n_steps // 4 if t_valeur is None else t_valeur
+        if not 1 <= t_valeur < n_steps - 1:
+            raise ValueError("t_valeur doit laisser au moins un jeton avant et deux après (1 ≤ t_valeur < n_steps − 1)")
         ens = self.generer_ensemble(prompts, n, n_steps, seed_base=seed_base, layers=[layer], keep_steps=True,
-                                    mean_layers=[layer], steps_to_keep=[t_valeur])
-        R = [ens.hidden_mean[layer][ens.lignes_du_prompt(p)] for p in range(len(prompts))]
+                                    mean_layers=[] if rejouer else [layer], steps_to_keep=[t_valeur])
+        if rejouer:
+            R_all = self.rejouer_moyennes([ens.prompt_ids[p] for p in ens.prompt_of], ens.tokens, [layer])[layer]
+        else:
+            R_all = ens.hidden_mean[layer]
+        R = [R_all[ens.lignes_du_prompt(p)] for p in range(len(prompts))]
         reg = analyser_regimes(R, seed=seed_analyse, npc=npc)
         fiches = []
         for p in range(len(prompts)):
@@ -1766,7 +1777,10 @@ class TrajectoryBifurcationEngine:
                     ens.hidden_steps[layer][li, 0].astype(np.float32), [r[:t_valeur] for r in ens.tokens[li]], fut,
                     seed=seed_analyse)
             fiches.append(f)
-        return {"couche": layer, "t_valeur": t_valeur, "regimes": {k: v for k, v in reg.items()
+        return {"couche": layer, "t_valeur": t_valeur, "n": n, "n_steps": n_steps, "npc": npc,
+                "seed_base": int(ens.seed_base), "seed_analyse": seed_analyse,
+                "representation": "rejouee" if rejouer else "generation",
+                "regimes": {k: v for k, v in reg.items()
                                                                   if k in ("pi", "pi_ci", "n_multi", "nul", "puissance",
                                                                            "verdict")},
                 "fiches": fiches}

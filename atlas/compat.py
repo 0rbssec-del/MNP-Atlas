@@ -8,6 +8,8 @@
 #   (hooks, JS exacte, générateur, trajectoire unique) : si le moteur change,
 #   seul ce fichier change.
 # - Garde de version : un moteur sans l'API v0.2 est refusé avec un message clair.
+# - v0.4 : cartes de l'espace caché (cartographier du moteur, core ≥ 0.2.1) et
+#   provenance complète (précision de calcul, jetons spéciaux, q, seuils…).
 
 from __future__ import annotations
 
@@ -56,8 +58,10 @@ METHODES_REQUISES = (
     "_generate_one_trajectory", "generate_ensemble", "compute_divergences",
     "detect_bifurcation", "choose_patch_time", "reversibility_analysis",
     "forced_patch_effect", "continue_from_prefix", "classify_pair",
-    "classify_pair_detail",
+    "classify_pair_detail", "generer_ensemble", "rejouer_moyennes", "cartographier",
 )
+# Paramètres de cartographier dont dépend l'atlas (core ≥ 0.2.1)
+PARAMETRES_CARTE = ("n", "n_steps", "layer", "t_valeur", "seed_base", "npc", "seed_analyse", "rejouer")
 
 
 def version_moteur() -> str:
@@ -72,7 +76,16 @@ def version_moteur() -> str:
 
 
 def reglages_moteur(moteur) -> Dict[str, Any]:
-    """Réglages qui déterminent les tirages (provenance d'une entrée d'atlas)."""
+    """Réglages qui déterminent les tirages et les mesures (provenance d'une entrée d'atlas).
+
+    v0.4 : précision de calcul et matériel (fp16 sur T4, bf16, fp32 sur CPU : les tirages diffèrent), jetons spéciaux,
+    q de Tsallis, top-k des divergences, couches, taille de lot, versions de torch et transformers."""
+    try:
+        import transformers
+        v_tf = transformers.__version__
+    except Exception:
+        v_tf = None
+    param = next(moteur.model.parameters(), None)
     return {
         "protocole": getattr(moteur, "protocole_atlas", None),
         "modele": moteur.model_name,
@@ -80,11 +93,21 @@ def reglages_moteur(moteur) -> Dict[str, Any]:
         "temperature": moteur.temperature,
         "top_p": moteur.top_p,
         "chat": moteur.chat,
+        "forbid_special": moteur.forbid_special,
+        "q_tsallis": moteur.q,
         "seed": moteur.seed,
         "max_new_tokens": moteur.max_new_tokens,
+        "topk_for_divergence": moteur.topk_for_divergence,
+        "layers_to_track": list(moteur.layers_to_track or []),
+        "batch_size": moteur.batch_size,
         "min_js_den": moteur.MIN_JS_DEN,
         "min_ll_den": moteur.MIN_LL_DEN,
+        "dtype": None if param is None else str(param.dtype).replace("torch.", ""),
+        "device": moteur.device.type,
+        "num_layers": moteur.num_layers,
         "core_version": version_moteur(),
+        "torch_version": torch.__version__,
+        "transformers_version": v_tf,
     }
 
 
@@ -92,6 +115,9 @@ def verifier_moteur(cls=TrajectoryBifurcationEngine) -> None:
     params = set(inspect.signature(cls.__init__).parameters)
     manque = [p for p in PARAMETRES_REQUIS if p not in params]
     manque += [m for m in METHODES_REQUISES if not hasattr(cls, m)]
+    if hasattr(cls, "cartographier"):
+        pc = set(inspect.signature(cls.cartographier).parameters)
+        manque += [f"cartographier({p}=)" for p in PARAMETRES_CARTE if p not in pc]
     if manque:
         raise RuntimeError(
             f"Moteur incompatible avec l'atlas (API v0.2 requise) ; manque : {', '.join(manque)}"
@@ -145,6 +171,15 @@ def generateur(moteur, graine: Optional[int]) -> Optional[torch.Generator]:
 def generer_trajectoire(moteur, prompt_ids: torch.Tensor, graine: Optional[int]) -> Trajectory:
     """Une trajectoire (API v0.1.x du moteur), avec l'échantillonneur du protocole."""
     return moteur._generate_one_trajectory(prompt_ids, seed=graine)
+
+
+def cartographier(moteur, prompts: Sequence[str], **kw) -> Dict[str, Any]:
+    """Carte de l'espace caché d'un ensemble de prompts (moteur.cartographier) : régimes de B2 sur les états, et pour
+    chaque prompt multimodal bifurcation par préfixe et valeur ajoutée sur les jetons. Arguments : PARAMETRES_CARTE."""
+    inconnus = sorted(set(kw) - set(PARAMETRES_CARTE))
+    if inconnus:
+        raise ValueError(f"Arguments inconnus de cartographier : {', '.join(inconnus)}")
+    return moteur.cartographier(list(prompts), **kw)
 
 
 # ----------------------------------------------------------------------
@@ -202,6 +237,7 @@ def paires_du_type(paires: List[Dict[str, Any]], detail: str) -> List[Dict[str, 
 __all__ = [
     "PROTOCOLES", "BifurcationResult", "PatchResult", "Trajectory", "TrajectoryBifurcationEngine",
     "version_moteur", "reglages_moteur", "verifier_moteur", "construire_moteur",
-    "capture_hooks", "patch_hook", "js_exacte", "generateur", "generer_trajectoire",
+    "capture_hooks", "patch_hook", "js_exacte", "generateur", "generer_trajectoire", "cartographier",
+    "PARAMETRES_CARTE",
     "resume_paire", "type_detaille", "paires_du_type",
 ]

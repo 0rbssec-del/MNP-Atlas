@@ -218,10 +218,27 @@ def test_temoin_negatif_gumbel_exact(eng):
 
 def test_cartographier(eng):
     out = eng.cartographier(PROMPTS[:2], n=24, n_steps=8, layer=2, t_valeur=3)
-    assert set(out) == {"couche", "t_valeur", "regimes", "fiches"} and len(out["fiches"]) == 2
-    assert out["regimes"]["verdict"]
+    assert set(out) == {"couche", "t_valeur", "n", "n_steps", "npc", "seed_base", "seed_analyse", "representation",
+                        "regimes", "fiches"} and len(out["fiches"]) == 2
+    assert out["regimes"]["verdict"] and out["representation"] == "generation" and out["seed_base"] == eng.seed
     import json
     json.dumps(out, default=float)
+    with pytest.raises(ValueError):
+        eng.cartographier(PROMPTS[:2], n=24, n_steps=8, t_valeur=7)
+
+
+def test_cartographier_rejoue_comme_b2(eng):
+    """rejouer=True : R_h de la passe rejouée (B2), mêmes décisions qu'analyser_regimes sur rejouer_moyennes."""
+    P, n, T = PROMPTS[:2], 24, 8
+    out = eng.cartographier(P, n=n, n_steps=T, layer=2, t_valeur=3, seed_base=11, npc=4, seed_analyse=5, rejouer=True)
+    ens = eng.generer_ensemble(P, n, T, seed_base=11, progress=False)
+    R = eng.rejouer_moyennes([ens.prompt_ids[p] for p in ens.prompt_of], ens.tokens, [2])[2]
+    ref = core.analyser_regimes([R[ens.lignes_du_prompt(p)] for p in range(len(P))], seed=5, npc=4)
+    assert out["representation"] == "rejouee"
+    assert [f["multimodal"] for f in out["fiches"]] == ref["multimodal"]
+    np.testing.assert_allclose([f["dip"] for f in out["fiches"]], ref["dip"])
+    gen = eng.cartographier(P, n=n, n_steps=T, layer=2, t_valeur=3, seed_base=11, npc=4, seed_analyse=5)
+    assert [f["suites_distinctes"] for f in gen["fiches"]] == [f["suites_distinctes"] for f in out["fiches"]]
 
 
 def test_pas_gardes_et_longueurs(eng):

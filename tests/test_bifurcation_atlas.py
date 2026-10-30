@@ -1,4 +1,4 @@
-# Tests de l'atlas v0.3 (atlas/bifurcation_atlas.py) : résumés, compatibilité
+# Tests de l'atlas v0.3, gardés en v0.4 (atlas/bifurcation_atlas.py) : résumés, compatibilité
 # avec les entrées v0.1.x, provenance, sérialisation, construction en lot sur
 # le moteur v0.2 (petit Qwen3 aléatoire, CPU).
 
@@ -121,7 +121,7 @@ def test_provenance_comparaison_et_sauvegarde(tmp_path):
     lu = BifurcationAtlas.load(tmp_path / "x")
     assert len(lu) == 3 and lu.provenance[0]["protocole"] == "sgz" and lu.provenance[2] is None
     assert lu.get_by_prompt("b").prompt == "b"
-    assert lu.metadata["atlas_version"] == "0.3" and lu.metadata["core_version"] == compat.version_moteur()
+    assert lu.metadata["atlas_version"] == "0.4" and lu.metadata["core_version"] == compat.version_moteur()
 
 
 def test_atlas_v02_sans_provenance(tmp_path):
@@ -137,7 +137,7 @@ def test_atlas_v02_sans_provenance(tmp_path):
 
 
 def test_version_moteur():
-    assert compat.version_moteur() == "0.2.0"
+    assert compat.version_moteur() == "0.2.1"
 
 
 def test_construction_en_lot_protocole_sgz():
