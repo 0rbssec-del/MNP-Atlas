@@ -9,7 +9,8 @@
 #     jetons), régimes de B2 pour l'ensemble. Stockées en JSON.
 #   - Requêtes sur les cartes : fiches filtrées, signature d'un prompt,
 #     matrice de signatures, accord entre deux cartes (prompts multimodaux
-#     partagés, p hypergéométrique), résumé par carte.
+#     partagés, p hypergéométrique, stratifié par langue ou autre strate),
+#     résumé par carte.
 #   - Comparabilité à trois états (oui / non / inconnu) sur des réglages
 #     complets : précision de calcul, jetons spéciaux, seuils de recovery,
 #     arguments d'analyse (réflexion on/off)… Un réglage absent d'une
@@ -108,6 +109,24 @@ def p_hypergeometrique(n: int, a: int, b: int, k: int) -> float:
     if k <= 0:
         return 1.0
     return sum(comb(a, x) * comb(n - a, b - x) for x in range(k, min(a, b) + 1)) / comb(n, b)
+
+
+def _loi_hypergeometrique(n: int, a: int, b: int) -> Dict[int, float]:
+    return {x: comb(a, x) * comb(n - a, b - x) / comb(n, b) for x in range(max(0, a + b - n), min(a, b) + 1)}
+
+
+def p_hypergeometrique_strates(strates: List[Tuple[int, int, int]], k: int) -> float:
+    """P(X₁ + … + X_S ≥ k), X_s hypergéométrique (n_s, a_s, b_s) indépendantes : test exact conditionnel aux marges
+    de chaque strate (le hasard ne mélange les prompts qu'à l'intérieur d'une strate, par exemple d'une langue)."""
+    loi = {0: 1.0}
+    for n, a, b in strates:
+        ls = _loi_hypergeometrique(n, a, b)
+        nouv: Dict[int, float] = {}
+        for x, px in loi.items():
+            for y, py in ls.items():
+                nouv[x + y] = nouv.get(x + y, 0.0) + px * py
+        loi = nouv
+    return float(min(1.0, sum(p for x, p in loi.items() if x >= k)))
 
 
 @dataclass
@@ -446,6 +465,10 @@ class BifurcationAtlas:
                 if a["n_communs"]:
                     print(f"  accord {self.cartes[i]['nom']} / {self.cartes[j]['nom']} : {a['partages']} prompts multimodaux "
                           f"partagés sur {a['n_communs']} (attendu {a['attendu']:.1f}, p = {a['p_hypergeometrique']:.3g})")
+                    if a["p_stratifie"] is not None:
+                        det = " ; ".join(f"{st} {d['partages']}/{d['n']} (attendu {d['attendu']:.1f})"
+                                         for st, d in a["strates"].items())
+                        print(f"    stratifié ({det}) : attendu {a['attendu_stratifie']:.1f}, p = {a['p_stratifie']:.3g}")
         print(f"Entrées historiques (v0.1)  : {s['n_entries']}")
         if not s["n_entries"]:
             return
@@ -521,30 +544,40 @@ class BifurcationAtlas:
     # ------------------------------------------------------------------
 
     def add_carte(self, carte: Dict[str, Any], provenance: Optional[Dict[str, Any]] = None,
-                  nom: Optional[str] = None) -> int:
+                  nom: Optional[str] = None, strates: Optional[Union[Dict[str, str], Callable[[str], str]]] = None) -> int:
         """Ajoute une carte (sortie de cartographier du moteur) et retourne son index. `provenance` : réglages du
-        moteur (atlas.compat.reglages_moteur)."""
+        moteur (atlas.compat.reglages_moteur). `strates` : strate de chaque prompt (langue, genre…), dictionnaire
+        prompt → strate ou fonction ; gardée dans la fiche (« strate ») et utilisée par accord_cartes."""
         if not isinstance(carte, dict) or "fiches" not in carte or "regimes" not in carte:
             raise ValueError("carte : dictionnaire de cartographier attendu (clés « regimes » et « fiches »)")
         prov = None if provenance is None else _json(provenance)
+        carte = _json(carte)
+        if strates is not None:
+            lire = strates if callable(strates) else strates.get
+            for f in carte["fiches"]:
+                st = lire(f["prompt"])
+                if st is None:
+                    raise ValueError(f"strate manquante pour le prompt : {f['prompt'][:60]}")
+                f["strate"] = str(st)
         self.cartes.append({
             "nom": nom or (prov or {}).get("modele") or f"carte_{len(self.cartes)}",
             "cree": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
-            "carte": _json(carte),
+            "carte": carte,
             "provenance": prov,
         })
         self.metadata["n_cartes"] = len(self.cartes)
         return len(self.cartes) - 1
 
     def cartographier(self, engine: Union[TrajectoryBifurcationEngine, str], prompts: List[str],
-                      nom: Optional[str] = None, moteur_kwargs: Optional[Dict[str, Any]] = None, **kw) -> int:
+                      nom: Optional[str] = None, moteur_kwargs: Optional[Dict[str, Any]] = None,
+                      strates: Optional[Union[Dict[str, str], Callable[[str], str]]] = None, **kw) -> int:
         """Construit une carte avec le moteur (ou un protocole de atlas.compat construit avec `moteur_kwargs`) et
         l'ajoute. `kw` : arguments de cartographier (n, n_steps, layer, t_valeur, seed_base, npc, seed_analyse,
-        rejouer)."""
+        rejouer). `strates` : voir add_carte."""
         if isinstance(engine, str):
             engine = construire_moteur(engine, **(moteur_kwargs or {}))
         carte = compat.cartographier(engine, prompts, **kw)
-        return self.add_carte(carte, reglages_moteur(engine), nom)
+        return self.add_carte(carte, reglages_moteur(engine), nom, strates)
 
     def _carte(self, i: int) -> Dict[str, Any]:
         return self.cartes[i]["carte"]
@@ -620,10 +653,16 @@ class BifurcationAtlas:
             "suites_distinctes_median": float(np.median([f["suites_distinctes"] for f in fi])) if fi else None,
         }
 
-    def accord_cartes(self, i: int, j: int) -> Dict[str, Any]:
+    def accord_cartes(self, i: int, j: int,
+                      strates: Optional[Union[Dict[str, str], Callable[[str], str]]] = None) -> Dict[str, Any]:
         """Les mêmes prompts sont-ils multimodaux dans les deux cartes (deux modèles, par exemple) ? Sur les prompts
         communs : prompts multimodaux partagés, nombre attendu par hasard et p hypergéométrique (au moins autant de
-        partagés), indice de Jaccard. La comparabilité ignore le modèle et la couche, qui diffèrent entre modèles."""
+        partagés), indice de Jaccard. La comparabilité ignore le modèle et la couche, qui diffèrent entre modèles.
+
+        Stratifié (`strates`, ou à défaut la « strate » des fiches de la carte i) : le hasard ne mélange les prompts
+        qu'à l'intérieur d'une strate. Si une strate (une langue) a plus de prompts multimodaux dans les deux cartes,
+        le test non stratifié prend cet effet de strate pour un accord prompt par prompt ; le test stratifié non.
+        Rapporte attendu_stratifie, p_stratifie et le détail par strate."""
         fa = {f["prompt"]: bool(f.get("multimodal")) for f in self._carte(i)["fiches"]}
         fb = {f["prompt"]: bool(f.get("multimodal")) for f in self._carte(j)["fiches"]}
         communs = [p for p in fa if p in fb]
@@ -631,6 +670,28 @@ class BifurcationAtlas:
         mb = {p for p in communs if fb[p]}
         k, n = len(ma & mb), len(communs)
         union = ma | mb
+        if strates is None:
+            st_fiches = {f["prompt"]: f.get("strate") for f in self._carte(i)["fiches"]}
+            strates = st_fiches if communs and all(st_fiches[p] is not None for p in communs) else None
+        strat = None
+        if strates is not None and n:
+            lire = strates if callable(strates) else strates.get
+            par: Dict[str, List[str]] = {}
+            for p in communs:
+                st = lire(p)
+                if st is None:
+                    raise ValueError(f"strate manquante pour le prompt : {p[:60]}")
+                par.setdefault(str(st), []).append(p)
+            detail = {}
+            for st, ps in par.items():
+                a_, b_ = sum(p in ma for p in ps), sum(p in mb for p in ps)
+                k_ = sum(p in ma and p in mb for p in ps)
+                detail[st] = {"n": len(ps), "multi_a": a_, "multi_b": b_, "partages": k_,
+                              "attendu": a_ * b_ / len(ps), "p_hypergeometrique": p_hypergeometrique(len(ps), a_, b_, k_)}
+            strat = {"par_strate": detail,
+                     "attendu_stratifie": sum(d["attendu"] for d in detail.values()),
+                     "p_stratifie": p_hypergeometrique_strates(
+                         [(d["n"], d["multi_a"], d["multi_b"]) for d in detail.values()], k)}
         return {
             "n_communs": n,
             "multi_a": len(ma),
@@ -642,6 +703,10 @@ class BifurcationAtlas:
             "prompts_partages": [p for p in communs if p in ma and p in mb],
             "comparabilite": comparer_provenances(self.parametres_carte(i), self.parametres_carte(j), CLES_CARTES,
                                                   ignorer=("modele", "couche")),
+            # None si aucune strate n'est connue
+            "strates": None if strat is None else strat["par_strate"],
+            "attendu_stratifie": None if strat is None else strat["attendu_stratifie"],
+            "p_stratifie": None if strat is None else strat["p_stratifie"],
         }
 
     def exporter_carte(self, i: int, fichier: Union[str, Path]) -> None:
@@ -650,7 +715,7 @@ class BifurcationAtlas:
 
     def importer_carte(self, fichier: Union[str, Path]) -> int:
         rec = json.loads(Path(fichier).read_text())
-        i = self.add_carte(rec["carte"], rec.get("provenance"), rec.get("nom"))
+        i = self.add_carte(rec["carte"], rec.get("provenance"), rec.get("nom"))      # strates gardées dans les fiches
         self.cartes[i]["cree"] = rec.get("cree", self.cartes[i]["cree"])     # date de construction, pas d'import
         return i
 

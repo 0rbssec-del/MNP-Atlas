@@ -12,7 +12,7 @@ entrées v0.1 comme historiques (API et valeurs inchangées).
 | Construire | `atlas.cartographier("sgz", prompts, moteur_kwargs=..., n=192, n_steps=32, rejouer=True)` (ou un moteur déjà construit) : `cartographier` du moteur (core ≥ 0.2.1), provenance complète |
 | Une carte | régimes de B2 sur R_h (test par moitiés, substitut gaussien, mélanges, BH, verdict) ; une fiche par prompt : `multimodal`, `dip`, `p`, `suites_distinctes`, `entropie_moyenne` ; pour un prompt multimodal, `bifurcation` (préfixe) et `valeur_ajoutee` (état au pas `t_valeur` contre un lecteur de jetons) |
 | Interroger | `fiches(i, multimodal=, verdict_valeur=)`, `signature(i, prompt)` (NaN si absent ; non testé ≠ « aucune »), `matrice_signatures(i)`, `resume_carte(i)` |
-| Comparer | `accord_cartes(i, j)` : prompts multimodaux partagés, attendu par hasard, p hypergéométrique, Jaccard (B2 après coup : 5 partagés, p = 0,009) ; comparabilité sans le modèle ni la couche |
+| Comparer | `accord_cartes(i, j, strates=)` : prompts multimodaux partagés, attendu par hasard, p hypergéométrique, Jaccard ; **stratifié** par langue (ou autre strate, gardée dans les fiches via `cartographier(..., strates=)`) : test exact conditionnel aux marges de chaque strate. Décisions publiées de B2 : 5 partagés, p = 0,009 brut, **p = 0,045 stratifié** (attendu 1,7 → 2,5 : les bassins sont surtout anglais dans les deux modèles). Comparabilité sans le modèle ni la couche |
 | Stocker | `atlas_cartes.json` (JSON seul) à côté de `atlas_meta.json` et `atlas_data.pkl` ; `exporter_carte` / `importer_carte` pour des cartes faites dans des processus séparés |
 | Kaggle | `experiments/construire_atlas.py --model Qwen/Qwen3-1.7B-Base HuggingFaceTB/SmolLM3-3B-Base` : un modèle par GPU, carte des 64 prompts de B2 au protocole de B2, contrôle 64/64 contre B2, atlas fusionné, accord entre modèles. Remplace `reproduire_b2.py` |
 
@@ -29,7 +29,8 @@ de lot, nombre de couches, versions de torch et transformers.
 
 **Limites.** La carte ne garde que des résumés par prompt (pas les états) ; la valeur ajoutée a besoin d'au moins 5
 trajectoires par régime (sinon NON TESTABLE) ; les étiquettes de régime futur sont définies sur les jetons futurs
-(prudent, voir `MOTEUR_V02.md`) ; `accord_cartes` suppose les prompts échangeables (même p que l'analyse après coup de B2).
+(prudent, voir `MOTEUR_V02.md`) ; sans strates, `accord_cartes` suppose les prompts échangeables, ce qui confond un effet de
+strate (une langue plus multimodale dans les deux modèles) avec un accord prompt par prompt : lire `p_stratifie`.
 
 ## Séparation
 
@@ -39,7 +40,7 @@ trajectoires par régime (sinon NON TESTABLE) ; les étiquettes de régime futur
 | Couche atlas | `atlas/compat.py` | Seul point de contact avec le moteur : protocoles figés, accès aux méthodes internes, garde de version. |
 | Expériences atlas | `experiments/multi_prompt.py`, `experiments/replication_akarlar.py` | Construisent leur moteur avec `construire_moteur(protocole, ...)` et n'appellent aucune méthode interne directement. |
 | Atlas des résultats | `atlas/bifurcation_atlas.py` (raccourci : `bifurcation_atlas.py`) | v0.4 : cartes de l'espace caché, et `BifurcationResult` historiques ; types, version et réglages du moteur lus via `atlas/compat.py`. |
-| Expérience atlas v0.4 | `experiments/construire_atlas.py`, `tests/test_atlas_v04.py` | Première carte (64 prompts de B2, deux modèles) ; 9 tests. |
+| Expérience atlas v0.4 | `experiments/construire_atlas.py`, `tests/test_atlas_v04.py` | Première carte (64 prompts de B2, deux modèles, strates de langue) ; 14 tests. |
 
 Si le moteur change d'API, seul `atlas/compat.py` doit suivre ; `verifier_moteur()` refuse un moteur sans l'API v0.2
 avec la liste de ce qui manque.

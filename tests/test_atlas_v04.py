@@ -206,3 +206,95 @@ def test_cartographier_de_bout_en_bout(jouet):
     assert X.shape == (4, len(CHAMPS_SIGNATURE)) and set(X[:, 0]) <= {0.0, 1.0}
     with pytest.raises(ValueError):
         atlas.cartographier("sgz", prompts, moteur_kwargs=kw, n=24, inconnu=1)
+
+
+# ---------- Accord stratifié (par langue) ----------
+
+def test_p_strates_exact_contre_enumeration():
+    from itertools import combinations, product
+    from atlas.bifurcation_atlas import p_hypergeometrique_strates
+    assert p_hypergeometrique_strates([(64, 12, 9)], 5) == pytest.approx(p_hypergeometrique(64, 12, 9, 5))
+    strates = [(4, 2, 2), (5, 3, 2), (3, 1, 3)]
+    # énumération : dans chaque strate, les b prompts multimodaux de la seconde carte tirés parmi n (a marqués : 0..a−1)
+    tirages = [[sum(x < a for x in c) for c in combinations(range(n), b)] for n, a, b in strates]
+    tot = [sum(t) for t in product(*tirages)]
+    for k in range(0, 7):
+        assert p_hypergeometrique_strates(strates, k) == pytest.approx(np.mean([t >= k for t in tot]))
+
+
+def cartes_b2():
+    """Décisions publiées de B2 (T = 0,6, R_h) : 32 prompts français puis 32 anglais."""
+    from reproduire_b2_decisions import B2_MULTIMODAUX
+    prompts = [f"fr{i}" if i < 32 else f"en{i - 32}" for i in range(64)]
+    langue = {p: p[:2] for p in prompts}
+    atlas = BifurcationAtlas()
+    for nom, idx in B2_MULTIMODAUX.items():
+        atlas.add_carte(carte([fiche(p, i in idx, "AUCUNE") for i, p in enumerate(prompts)]), dict(PROV, modele=nom),
+                        nom, strates=langue)
+    return atlas
+
+
+@pytest.fixture(autouse=True, scope="module")
+def _decisions_b2(tmp_path_factory):
+    """Décisions de B2 lues dans experiments/reproduire_b2.py sans l'importer (il importe torch et le moteur)."""
+    import ast
+    src = (Path(__file__).resolve().parents[1] / "experiments" / "reproduire_b2.py").read_text(encoding="utf-8")
+    noeud = next(n for n in ast.parse(src).body if isinstance(n, ast.Assign)
+                 and getattr(n.targets[0], "id", None) == "B2_MULTIMODAUX")
+    d = tmp_path_factory.mktemp("b2")
+    (d / "reproduire_b2_decisions.py").write_text("B2_MULTIMODAUX = " + ast.unparse(noeud.value))
+    sys.path.insert(0, str(d))
+    yield
+    sys.path.remove(str(d))
+
+
+def test_accord_b2_brut_et_stratifie():
+    atlas = cartes_b2()
+    a = atlas.accord_cartes(0, 1)
+    assert (a["multi_a"], a["multi_b"], a["partages"]) == (12, 9, 5)
+    assert a["p_hypergeometrique"] == pytest.approx(0.008566, abs=1e-5)                  # B2 après coup
+    assert a["strates"]["fr"] == {"n": 32, "multi_a": 3, "multi_b": 0, "partages": 0, "attendu": 0.0,
+                                  "p_hypergeometrique": 1.0}
+    assert a["strates"]["en"]["partages"] == 5 and a["attendu_stratifie"] == pytest.approx(81 / 32)
+    assert a["p_stratifie"] == pytest.approx(0.045414, abs=1e-5)
+
+
+def test_stratifie_corrige_un_effet_de_langue():
+    """Aucun bassin en français, presque tous les prompts anglais multimodaux dans les deux cartes : le test brut voit
+    un accord prompt par prompt, le test stratifié non (8 sur 10 dans chaque carte forcent au moins 6 partagés)."""
+    prompts = [f"fr{i}" for i in range(20)] + [f"en{i}" for i in range(10)]
+    a_multi = {f"en{i}" for i in range(8)}
+    b_multi = {f"en{i}" for i in (0, 1, 2, 3, 4, 5, 8, 9)}
+    atlas = BifurcationAtlas()
+    for m in (a_multi, b_multi):
+        atlas.add_carte(carte([fiche(p, p in m, "AUCUNE") for p in prompts]), PROV, strates=lambda p: p[:2])
+    r = atlas.accord_cartes(0, 1)
+    assert r["partages"] == 6 and r["p_hypergeometrique"] < 0.002
+    assert r["p_stratifie"] == pytest.approx(1.0)
+    # strates passées à l'appel : elles priment sur celles des fiches
+    r2 = atlas.accord_cartes(0, 1, strates={p: "tous" for p in prompts})
+    assert r2["p_stratifie"] == pytest.approx(r2["p_hypergeometrique"])
+
+
+def test_strates_gardees_et_controlees(tmp_path):
+    atlas = cartes_b2()
+    assert atlas.cartes[0]["carte"]["fiches"][0]["strate"] == "fr"
+    atlas.save(tmp_path / "x")
+    lu = BifurcationAtlas.load(tmp_path / "x")
+    assert lu.accord_cartes(0, 1)["p_stratifie"] == pytest.approx(0.045414, abs=1e-5)
+    atlas.exporter_carte(0, tmp_path / "c.json")
+    autre = BifurcationAtlas()
+    autre.importer_carte(tmp_path / "c.json")
+    assert autre.cartes[0]["carte"]["fiches"][40]["strate"] == "en"
+    with pytest.raises(ValueError, match="strate manquante"):
+        BifurcationAtlas().add_carte(carte([fiche("x", False)]), PROV, strates={})
+    sans = BifurcationAtlas()
+    sans.add_carte(carte([fiche("x", True, "AUCUNE")]), PROV)
+    sans.add_carte(carte([fiche("x", True, "AUCUNE")]), PROV)
+    assert sans.accord_cartes(0, 1)["p_stratifie"] is None                # aucune strate connue
+
+
+def test_print_summary_stratifie(capsys):
+    cartes_b2().print_summary()
+    out = capsys.readouterr().out
+    assert "stratifié (fr 0/32 (attendu 0.0) ; en 5/32 (attendu 2.5)) : attendu 2.5, p = 0.0454" in out

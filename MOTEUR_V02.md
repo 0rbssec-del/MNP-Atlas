@@ -98,7 +98,7 @@ réglages (T, top-p, gabarit) : relancées, elles refont les mêmes tirages qu'e
 ## 7. Tests
 
 `python -m pytest -q tests` : 46 tests du moteur (29 dans `test_trajectory_bifurcation_core.py`, les tests de v0.1.5
-avec les deux échantillonneurs ; 17 dans `test_v02.py`), plus les 31 de l'atlas.
+avec les deux échantillonneurs ; 17 dans `test_v02.py`), plus les 36 de l'atlas.
 Seul le tokenizer de `Qwen/Qwen3-0.6B` est téléchargé.
 
 ## 8. Limites connues

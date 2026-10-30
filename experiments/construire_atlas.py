@@ -9,7 +9,8 @@
 # Usage (GPU, Internet), deux modèles en même temps, un par GPU (Kaggle T4 × 2) :
 #   python experiments/construire_atlas.py --model Qwen/Qwen3-1.7B-Base HuggingFaceTB/SmolLM3-3B-Base --out atlas_b2
 # Sorties : atlas_b2/carte_<modèle>.json (une par modèle), puis atlas_b2/atlas/ (atlas v0.4 fusionné) et le résumé,
-# dont l'accord entre les deux cartes (B2 après coup : 5 prompts partagés, p = 0,009).
+# dont l'accord entre les deux cartes, brut et stratifié par langue (décisions publiées de B2 : 5 prompts partagés,
+# p = 0,009 brut, p = 0,045 stratifié : les bassins sont surtout en anglais dans les deux modèles).
 # Durée : ~20 min (Qwen3-1.7B) et ~30 min (SmolLM3-3B) en parallèle sur une T4 chacun [estimation].
 
 import argparse
@@ -30,6 +31,10 @@ from atlas.compat import construire_moteur  # noqa: E402
 from atlas.bifurcation_atlas import BifurcationAtlas  # noqa: E402
 from reproduire_b2 import B2_MULTIMODAUX, PROMPTS, SEED  # noqa: E402
 
+# Langue de chaque prompt de B2 : les 32 premiers en français, les 32 suivants en anglais
+LANGUE = {p: ("fr" if i < 32 else "en") for i, p in enumerate(PROMPTS)}
+assert LANGUE["La langue française comporte de nombreux mots"] == "fr" and LANGUE["The city of Boston is known for"] == "en"
+
 
 def une_carte(model, n, steps, out_dir):
     label = model.split("/")[-1]
@@ -39,8 +44,8 @@ def une_carte(model, n, steps, out_dir):
         eng.pad_id = eng.tokenizer.pad_token_id
     t0 = time.time()
     atlas = BifurcationAtlas(f"b2_{label}")
-    i = atlas.cartographier(eng, PROMPTS, nom=label, n=n, n_steps=steps, seed_base=SEED + 17, seed_analyse=SEED,
-                            rejouer=True)
+    i = atlas.cartographier(eng, PROMPTS, nom=label, strates=LANGUE, n=n, n_steps=steps, seed_base=SEED + 17,
+                            seed_analyse=SEED, rejouer=True)
     c = atlas.resume_carte(i)
     r = c["regimes"]
     print(f"[CARTE] {label} : {c['n_multimodaux']}/{c['n_prompts']} prompts multimodaux (π = {r['pi']:.2f}) ; substitut "
@@ -102,8 +107,10 @@ def fusionner(models, out_dir):
     for i in range(len(atlas.cartes)):
         for j in range(i + 1, len(atlas.cartes)):
             a = atlas.accord_cartes(i, j)
-            print(f"[ACCORD] prompts multimodaux partagés : {a['prompts_partages']} ; comparabilité "
-                  f"{a['comparabilite']}")
+            print(f"[ACCORD] {a['partages']} prompts multimodaux partagés : brut p = {a['p_hypergeometrique']:.3g} "
+                  f"(attendu {a['attendu']:.1f}) ; stratifié par langue p = {a['p_stratifie']:.3g} (attendu "
+                  f"{a['attendu_stratifie']:.1f}) ; par langue {a['strates']}")
+            print(f"[ACCORD] prompts partagés : {a['prompts_partages']} ; comparabilité {a['comparabilite']}")
     (out_dir / "resume.json").write_text(json.dumps(atlas.summary(), indent=1, ensure_ascii=False, default=float))
     return atlas
 
