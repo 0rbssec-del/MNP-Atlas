@@ -1,0 +1,48 @@
+=== A. Dégradation du texte : ΔNLL moyen (max) par condition, en nat par jeton ===
+  vraie@0.5    +0.01 (+0.21)
+  vraie@1      +0.13 (+0.55)
+  vraie@2      +0.54 (+1.35)
+  vraie@-1     +0.12 (+0.32)
+  aleatoire@1  +0.07 (+0.31)
+  aleatoire@2  +0.25 (+0.66)
+  permute@1    +0.13 (+0.38)
+  permute@2    +0.48 (+0.93)
+  autre@1      +0.09 (+0.31)
+  autre@2      +0.45 (+1.35)
+  prompts à ΔNLL > 0,5 pour la direction vraie : α = 1 : [38] ; α = 2 : [0, 10, 13, 18, 19, 21, 38, 51, 52]
+
+=== B. Indépendance des contrôles vis-à-vis de la direction vraie d ===
+  |cos(contrôle, d)| médian [max] ; isotrope en dimension 1024 : ≈ 0.031
+  aleatoire 0.029 [0.078] ; corr(cos signé, Δ du contrôle à α = 1) = -0.14
+  permute   0.418 [0.812] ; corr(cos signé, Δ du contrôle à α = 1) = +0.80
+  autre     0.134 [0.918] ; corr(cos signé, Δ du contrôle à α = 1) = +0.51
+
+=== C. Robustesse de P-A et cohérence du signe ===
+  D avec trois contrôles (P-A officiel) : médiane +0.299, positifs 17/18, Wilcoxon exact p = 3.81e-05
+  D avec gaussien seul (isotrope) : médiane +0.260, positifs 16/18, Wilcoxon exact p = 1.91e-05
+  direction vraie > TOUS les contrôles à α = 1 : 14/18 prompts valides
+  Δ(α = +1) > 0 : 18/19 ; Δ(α = −1) < 0 : 19/19 ; les deux (signe cohérent) : 18/19
+  Δ vraie@1 : médiane +0.27 ; taux de référence médian 0.39
+
+=== D. Exemples de suites de fit (jetons décodés) ===
+--- prompt 47 : « The Amazon River flows through » (fit : 34 rares / 192)
+  RARE    |  which of the following countries?⏎A. Peru, Brazil, Colombia⏎B. Peru, Colombia, Ecuador⏎C. Peru, Colombia, Bol
+  RARE    |  which countries?⏎A. United States, Brazil, Peru, Ecuador⏎B. Brazil, Peru, Ecuador, Colombia⏎C. Colombia, Peru
+  RARE    |  the Amazon Region of South America.⏎A. True⏎B. False⏎Answer:⏎A⏎⏎In the field of data source management, there
+  DOMINANT|  which country?⏎The Amazon River flows through Brazil. It is the largest river in South America and one of the
+  DOMINANT|  Central America, crossing the nation of El Salvador. The river is 400 miles long. If the river flows at an av
+  DOMINANT|  which country? The Amazon River flows through Brazil, which is a country in South America. The Amazon River i
+--- prompt 18 : « La recette traditionnelle du pot-au-feu » (fit : 58 rares / 192)
+  RARE    |  est un plat très simple qui peut être préparé rapidement et facilement. 1. Préparer le pot-au-feu : Dans un p
+  RARE    |  est généralement préparée à partir de 200 gaz pêcheurs, dont 80 sont des produits de qualité.⏎Dans les
+  RARE    | , qui est principalement composée de tomates, piments, champignons, fraises et thon, a été introduite par la F
+  DOMINANT|  est d'abord fournie à une cuisine traditionnelle.⏎A. Vrai⏎B. Faux⏎Answer:⏎⏎B⏎⏎What is the English abbreviatio
+  DOMINANT|  est généralement préparée avec des légumes comme le courgette et le champignon.⏎⏎Réponse: None⏎⏎Quelle est l'
+  DOMINANT|  est de servir les poissons frais.⏎⏎Réponse: None⏎⏎Quelle est la principale source d'information pour les étud
+--- prompt 0 : « La ville de Lyon est située au confluent » (fit : 83 rares / 192)
+  RARE    |  des deux rivières de la Gironde et de la Loire.⏎⏎Réponse:⏎None⏎⏎Les récits d'art en France sont souvent
+  RARE    |  de deux rivières.⏎⏎Réponse:⏎None⏎⏎Quelle est la principale cause de la mondialisation dans le secteur des méd
+  RARE    |  des rivières Rhône et Rhéa.⏎⏎Réponse:⏎None⏎⏎La France a des lois spécifiques pour l'exploitation des
+  DOMINANT|  des rivières Écouderon et Vermiglon, en Alpes-Maritimes, en France. La ville est située au centre de l
+  DOMINANT|  de la Seine et de la Loire, dans le sud de la France.⏎Elle est connue pour ses lieux historiques, ses monumen
+  DOMINANT|  de deux rivières, le Rhône et le Loire. La ville de Lyon est située au confluent de deux rivières, le
