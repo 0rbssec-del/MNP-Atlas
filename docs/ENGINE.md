@@ -1,8 +1,8 @@
-# Moteur v0.2.0 : `trajectory_bifurcation_core.py`
+# Moteur v0.2.1 : `trajectory_bifurcation_core.py`
 
-Version : Core v0.2.0, commit `d900d27` (branche `ccr-0f9a5c2e-elasx1`). Fichier livré tel quel, identique octet pour
-octet au fichier fourni ; le code atlas ne le modifie pas (voir `docs/ATLAS.md`). 1 826 lignes, 45 tests
-(`tests/test_trajectory_bifurcation_core.py`, `tests/test_v02.py`).
+Version : Core v0.2.1 (branche `ccr-0f9a5c2e-elasx1`, commit `0af62ba`). La v0.2.0 a été livrée au commit `d900d27` ;
+la v0.2.1 ajoute `cartographier(rejouer=…)` (voir § 3). Le code atlas ne modifie pas le moteur (voir `docs/ATLAS.md`).
+1 840 lignes ; tests : `tests/test_trajectory_bifurcation_core.py`, `tests/test_v02.py`.
 
 ## 1. Rôle
 
@@ -13,18 +13,18 @@ si l'état caché d'une trajectoire porte l'issue d'une autre. La v0.2 l'aligne 
 
 ## 2. Architecture
 
-| Bloc | Lignes | Contenu |
-|---|---|---|
-| Structures | 62–183 | `Trajectory`, `Continuation`, `Ensemble` (lots), `PatchResult`, `BifurcationResult` |
-| Fonctions statistiques | 185–419 | entropies Shannon / Tsallis, bruit de Gumbel, `analyser_regimes` (B2), `bifurcation_prefixe`, `valeur_ajoutee_sur_jetons` |
-| Moteur : construction | 421–543 | `__init__`, `sgz()` (réglages SGZ) |
-| Hooks | 545–642 | capture de la sortie brute des couches, injection (patch) |
-| Échantillonnage | 644–713 | Gumbel à graine par (ligne, pas), multinomial v0.1.x, masque des jetons spéciaux, top-p |
-| Génération par lots | 715–908 | `generer_lot`, `generer_ensemble`, `rejouer_moyennes`, `ensemble_choc` (A1) |
-| API v0.1.x | 910–1050 | `_decode_loop` (KV-cache), `build_prompt_ids`, `generate_ensemble` |
-| Divergences | 1052–1262 | JS top-k, classement des paires, `compute_divergences`, `detect_bifurcation` |
-| Patching | 1264–1656 | `continue_from_prefix`, `forced_patch_effect`, `choose_patch_time`, `activation_patch_test`, `reversibility_analysis`, `summarize_patches` |
-| Pipelines | 1658–1826 | `analyze_prompt`, `cartographier` |
+| Bloc | Contenu |
+|---|---|
+| Structures | `Trajectory`, `Continuation`, `Ensemble` (lots), `PatchResult`, `BifurcationResult` |
+| Fonctions statistiques | entropies Shannon / Tsallis, bruit de Gumbel, `analyser_regimes` (B2), `bifurcation_prefixe`, `valeur_ajoutee_sur_jetons` |
+| Moteur : construction | `__init__`, `sgz()` (réglages SGZ) |
+| Hooks | capture de la sortie brute des couches, injection (patch) |
+| Échantillonnage | Gumbel à graine par (ligne, pas), multinomial v0.1.x, masque des jetons spéciaux, top-p |
+| Génération par lots | `generer_lot`, `generer_ensemble`, `rejouer_moyennes`, `ensemble_choc` (A1) |
+| API v0.1.x | `_decode_loop` (KV-cache), `build_prompt_ids`, `generate_ensemble` |
+| Divergences | JS top-k, classement des paires, `compute_divergences`, `detect_bifurcation` |
+| Patching | `continue_from_prefix`, `forced_patch_effect`, `choose_patch_time`, `activation_patch_test`, `reversibility_analysis`, `summarize_patches` |
+| Pipelines | `analyze_prompt`, `cartographier` |
 
 ## 3. Points techniques
 
@@ -64,12 +64,20 @@ sur B), calibre par substitut gaussien, mesure la puissance par mélanges de pro
 verdict BASSINS / MIXTE / CONTINUUM / NON INTERPRÉTABLE. `valeur_ajoutee_sur_jetons` compare l'AUC hors échantillon
 d'une sonde sur l'état caché à celle d'un lecteur de jetons du même préfixe.
 
+**Cartes (v0.2.1).** `cartographier(prompts, n, n_steps, layer, t_valeur, seed_base, npc, seed_analyse, rejouer)`
+génère l'ensemble par lots, calcule les régimes de B2 sur la représentation R_h (moyenne des états de la couche sur la
+suite) et, pour chaque prompt multimodal, la bifurcation par préfixe et la valeur ajoutée de l'état au pas `t_valeur`.
+Nouveautés v0.2.1 : `rejouer=True` recalcule R_h par une passe complète (`rejouer_moyennes`, exactement la représentation
+de B2) au lieu de la moyenne accumulée pendant la génération ; `t_valeur` est vérifié (1 ≤ t_valeur < n_steps − 1) ; la
+carte renvoie les réglages qui fixent le résultat (n, n_steps, npc, graines, représentation).
+
 ## 4. Utilisation
 
 ```python
 from trajectory_bifurcation_core import TrajectoryBifurcationEngine
 eng = TrajectoryBifurcationEngine.sgz("Qwen/Qwen3-1.7B-Base", max_new_tokens=32, seed=20261029)
 ens = eng.generer_ensemble(prompts, n=192, n_steps=32, layers=[17], keep_steps=True, mean_layers=[17])
+carte = eng.cartographier(prompts, n=192, n_steps=32, layer=17, t_valeur=8, rejouer=True)
 res = eng.analyze_prompt("The city of Boston is known for", n_trajectories=12, require_bifurcation=False)
 ```
 
@@ -78,14 +86,12 @@ res = eng.analyze_prompt("The city of Boston is known for", n_trajectories=12, r
 - La sortie de la dernière couche après la norme finale n'est pas capturée par les hooks.
 - Le patching traite une séquence à la fois.
 - `analyze_prompt` ne réserve pas de quota de paires « contexte » (`reversibility_analysis(detail=True)` le fait).
-- `MOTEUR_V02.md` attribue un témoin négatif à recouvrement 0 (v0.1.5) à `torch.multinomial` ; la cause vérifiée
-  était deux continuations vides (Jaccard d'ensembles vides), corrigée dans `bdec38e`.
 
 ## 6. Code complet
 
 ```python
 # trajectory_bifurcation_core.py
-# Core v0.2.0 – Trajectory Bifurcation Engine
+# Core v0.2.1 – Trajectory Bifurcation Engine
 # Fonctionnalités :
 #   - Génération d'ensembles de trajectoires à prompt fixe, par lots (remplissage
 #     à gauche, KV-cache), avec deux échantillonneurs :
@@ -1826,17 +1832,28 @@ class TrajectoryBifurcationEngine:
         seed_base: Optional[int] = None,
         npc: int = 10,
         seed_analyse: int = 0,
+        rejouer: bool = False,
     ) -> Dict[str, Any]:
         """Point d'entrée pour l'atlas : un ensemble par prompt, puis, sur la représentation R_h (moyenne des états de la
         couche `layer` après lecture des jetons générés ; défaut : couche ⌊2L/3⌋ − 1, soit hidden_states[⌊2L/3⌋] de B2) :
         régimes (test, calibration, puissance, verdict de B2), et pour chaque prompt multimodal la bifurcation par
         préfixe et la valeur ajoutée de l'état à t_valeur sur un lecteur de jetons (étiquettes = régimes de la suite après
-        t_valeur, définis sur les jetons futurs pour ne pas avantager les états). Renvoie des données sérialisables."""
+        t_valeur, définis sur les jetons futurs pour ne pas avantager les états). Renvoie des données sérialisables.
+
+        rejouer : R_h par une passe complète sur prompt + suite (rejouer_moyennes, exactement la représentation de B2)
+        au lieu de la moyenne accumulée pendant la génération (mêmes positions, KV-cache : arrondis fp16 un peu
+        différents). Les réglages qui fixent le résultat sont renvoyés avec la carte."""
         layer = (2 * self.num_layers) // 3 - 1 if layer is None else layer
         t_valeur = n_steps // 4 if t_valeur is None else t_valeur
+        if not 1 <= t_valeur < n_steps - 1:
+            raise ValueError("t_valeur doit laisser au moins un jeton avant et deux après (1 ≤ t_valeur < n_steps − 1)")
         ens = self.generer_ensemble(prompts, n, n_steps, seed_base=seed_base, layers=[layer], keep_steps=True,
-                                    mean_layers=[layer], steps_to_keep=[t_valeur])
-        R = [ens.hidden_mean[layer][ens.lignes_du_prompt(p)] for p in range(len(prompts))]
+                                    mean_layers=[] if rejouer else [layer], steps_to_keep=[t_valeur])
+        if rejouer:
+            R_all = self.rejouer_moyennes([ens.prompt_ids[p] for p in ens.prompt_of], ens.tokens, [layer])[layer]
+        else:
+            R_all = ens.hidden_mean[layer]
+        R = [R_all[ens.lignes_du_prompt(p)] for p in range(len(prompts))]
         reg = analyser_regimes(R, seed=seed_analyse, npc=npc)
         fiches = []
         for p in range(len(prompts)):
@@ -1852,7 +1869,10 @@ class TrajectoryBifurcationEngine:
                     ens.hidden_steps[layer][li, 0].astype(np.float32), [r[:t_valeur] for r in ens.tokens[li]], fut,
                     seed=seed_analyse)
             fiches.append(f)
-        return {"couche": layer, "t_valeur": t_valeur, "regimes": {k: v for k, v in reg.items()
+        return {"couche": layer, "t_valeur": t_valeur, "n": n, "n_steps": n_steps, "npc": npc,
+                "seed_base": int(ens.seed_base), "seed_analyse": seed_analyse,
+                "representation": "rejouee" if rejouer else "generation",
+                "regimes": {k: v for k, v in reg.items()
                                                                   if k in ("pi", "pi_ci", "n_multi", "nul", "puissance",
                                                                            "verdict")},
                 "fiches": fiches}
