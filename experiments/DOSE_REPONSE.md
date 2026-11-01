@@ -10,8 +10,9 @@ Sur les 19 prompts multimodaux de B2 (Qwen3-0.6B-Base, couche 17, bf16), ajouter
 μ_rare − μ_dominant **fait monter la part du régime rare** dans des suites neuves, de façon dose-dépendante et sans
 dégrader le texte à α = 1. Les quatre critères pré-enregistrés sont satisfaits : **verdict CONFIRMÉ**. Les régimes
 concernés sont des **formats de texte** (questionnaire à choix multiples ou « Réponse : None » contre prose), pas des
-contenus sémantiques. Deux des trois contrôles ne sont pas indépendants de la direction vraie : le verdict est confirmé
-aussi avec le seul contrôle isotrope, mais le contrôle « étiquettes permutées » est plus faible qu'annoncé.
+contenus sémantiques. Deux des trois contrôles d'origine contenaient une part de la direction vraie ; refaits **orthogonaux à
+d** (suite pré-enregistrée, `dose_reponse_orthogonal.py`), ils donnent aussi **CONFIRMÉ** (voir « Contrôles orthogonaux »).
+À α = 2, le texte se dégrade et les perturbations hors direction déplacent aussi le taux : la spécificité tient à α = 1.
 
 ## Montage
 
@@ -49,11 +50,30 @@ prompt. α = 1 ajoute la différence complète des centres à chaque position ; 
   contre prose déclarative ; prompt 18, rare = prose de recette contre format quiz (« A. Vrai B. Faux Answer: ») ; prompt 0,
   rare = « Réponse: None » contre prose.
 
+## Contrôles orthogonaux (suite, critères figés avant exécution : commit `31452f5`)
+
+Les contrôles « étiquettes permutées » et « autre prompt » de l'expérience principale, mêmes graines, privés de leur
+composante le long de d et remis à la norme ‖d‖ ; mêmes suites d'évaluation (référence regénérée identique à `eval.json` :
+19 prompts sur 19). Données : `eval_orth.json`, `orthogonal.txt`.
+
+| Critère | Seuil | Résultat | |
+|---|---|---|---|
+| O-0 construction | \|cos\| < 1e-6 | 2,8·10⁻¹⁶ | oui |
+| O-A efficacité | médiane D⊥ ≥ +0,10, Wilcoxon p < 0,05 | médiane +0,312, 17/18 positifs, p = 1,1·10⁻⁵ | oui |
+| O-B spécificité | \|médiane des contrôles\| < 0,05 | −0,018 | oui |
+| O-C dominance | vraie > les deux contrôles pour ≥ 70 % des prompts valides | 89 % | oui |
+
+**Verdict : CONFIRMÉ.** Post hoc, entre prompts, à α = 1 : Δ vraie +0,275 (écart-type 0,175) ; permuté⊥ −0,041 (0,130) ;
+autre⊥ +0,019 (0,129) ; gaussien +0,008 (0,107). Les contrôles ont une dispersion supérieure au bruit d'échantillonnage
+attendu d'un Δ apparié (≈ 0,07) : pris un à un, ils déplacent parfois le taux de ±0,2 avec un signe aléatoire, donc un contrôle
+isolé ne prouve rien sur un prompt ; c'est l'agrégat sur 18 prompts qui porte la conclusion. À α = 2 (ΔNLL moyen +0,5, texte
+dégradé), les contrôles orthogonaux ont un Δ moyen négatif (−0,08 et −0,06) et 9 à 13 prompts sur 19 au-delà de ±0,14 : les
+fortes perturbations hors direction déplacent aussi le taux.
+
 ## Limites
 
 Un seul modèle, une seule couche (17), une seule date de départ (t_debut = 0), bf16 sur CPU, 96 suites par condition. Les
 régimes sont des formats de texte : « actionnable » veut dire que l'ajout de la direction fait basculer le format, pas
-qu'on pilote un contenu. Les contrôles « permuté » et « autre prompt » contiennent une part de d : un contrôle orthogonalisé à d
-serait plus propre (non fait). Prompts sélectionnés par le test de B2 sur nos propres suites de fit (pas par la liste
+qu'on pilote un contenu. Prompts sélectionnés par le test de B2 sur nos propres suites de fit (pas par la liste
 publiée de B2, qui concerne d'autres modèles). L'interprétation causale se limite à : à ce modèle et cette couche, ajouter
 cette direction déplace ces suites vers ce régime plus que des directions de même norme.
