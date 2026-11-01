@@ -30,13 +30,37 @@ def eng():
                                       max_new_tokens=15, layers_to_track=[0, 2, 3], batch_size=16)
 
 
+PROMPTS = [{"idx": 1, "prompt": "Il était une fois", "ground_truth": ["a"], "wrong_indicators": ["e"]},
+           {"idx": 2, "prompt": "Une histoire courte", "ground_truth": ["i"], "wrong_indicators": ["o"]}]
+
+
+def bassin_parite(ba, *args, **kw):
+    """Bassin dont l'étiquette est la parité de la somme des jetons. Sur un modèle aléatoire, 15 jetons tirés dans
+    tout le vocabulaire contiennent presque toujours « a » : le classifieur par sous-chaînes classerait tout le
+    réservoir CORRECT, sans paire discordante. La parité donne des deux classes et dépend de toute la suite, donc le
+    patch peut la changer."""
+    class BassinParite(ba.Bassin):
+        def etiquettes(self, ids, p):
+            lab = "CORRECT" if sum(int(i) for i in ids) % 2 == 0 else "HALLUCINATION"
+            return lab, lab, ""
+    return BassinParite(*args, **kw)
+
+
+def test_etiquettes_par_le_classifieur(eng):
+    import bassin_akarlar as ba
+    b = ba.Bassin(eng, PROMPTS)
+    p = {"ground_truth": ["Paris"], "wrong_indicators": ["Lyon"]}
+    for mot, lab in (("Paris", "CORRECT"), ("Lyon", "HALLUCINATION"), ("Nice", "OTHER")):
+        ids = eng.tokenizer(" " + mot)["input_ids"]
+        assert b.etiquettes(ids, p)[:2] == (lab, lab)
+
+
 def test_montage_et_analyse(eng):
     import bassin_akarlar as ba
-    prompts = [{"idx": 1, "prompt": "Il était une fois", "ground_truth": ["a"], "wrong_indicators": ["e"]},
-               {"idx": 2, "prompt": "Une histoire courte", "ground_truth": ["i"], "wrong_indicators": ["o"]}]
-    b = ba.Bassin(eng, prompts, n_pool=16, n_pairs=2, n_seeds=4, layers=[0, 2, 3], l_soi=2)
+    prompts = PROMPTS
+    b = bassin_parite(ba, eng, prompts, n_pool=16, n_pairs=2, n_seeds=4, layers=[0, 2, 3], l_soi=2)
     meta = b.run()
-    assert any(m["paires"] for m in meta)
+    assert all(m["paires"] for m in meta)
     conds = {r["cond"] for r in b.rows}
     assert conds == {"base", "echange", "soi", "L0", "L2", "L3"}
     res = ba.analyser(b.rows, b.layers, b.l_soi)
@@ -46,7 +70,7 @@ def test_montage_et_analyse(eng):
     assert "[A] asymétrie" in txt and res["verdict"] in txt
     # nombres aléatoires communs : même (paire, direction, graine) → mêmes lignes de bruit, donc base = base relancée
     base1 = [(r["idx"], r["pair"], r["dir"], r["seed"], r["t1"]) for r in b.rows if r["cond"] == "base"]
-    b2 = ba.Bassin(eng, prompts, n_pool=16, n_pairs=2, n_seeds=4, layers=[0], l_soi=0)
+    b2 = bassin_parite(ba, eng, prompts, n_pool=16, n_pairs=2, n_seeds=4, layers=[0], l_soi=0)
     b2.run()
     base2 = [(r["idx"], r["pair"], r["dir"], r["seed"], r["t1"]) for r in b2.rows if r["cond"] == "base"]
     assert base1 == base2
