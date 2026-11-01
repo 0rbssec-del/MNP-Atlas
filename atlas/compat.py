@@ -13,9 +13,12 @@
 
 from __future__ import annotations
 
+import contextlib
 import inspect
 import re
-from typing import Any, Dict, List, Optional, Sequence
+from typing import Any, Dict, Iterator, List, Optional, Sequence, Union
+
+import numpy as np
 
 import torch
 
@@ -54,7 +57,7 @@ PROTOCOLES: Dict[str, Dict[str, Any]] = {
 # API du moteur dont dépend l'atlas
 PARAMETRES_REQUIS = ("sampler", "chat")
 METHODES_REQUISES = (
-    "_capture_hooks", "_patch_hook", "_js_rows", "_make_generator",
+    "_capture_hooks", "_capture_hooks_batch", "_patch_hook", "_js_rows", "_make_generator",
     "_generate_one_trajectory", "generate_ensemble", "compute_divergences",
     "detect_bifurcation", "choose_patch_time", "reversibility_analysis",
     "forced_patch_effect", "continue_from_prefix", "classify_pair",
@@ -154,9 +157,55 @@ def capture_hooks(moteur, couches: Sequence[int]):
     return moteur._capture_hooks(list(couches))
 
 
+def capture_hooks_lot(moteur, couches: Sequence[int], last: int = 1):
+    """Contexte : sortie de chaque couche pour tout le lot, aux `last` dernières positions (float32, sur l'appareil)."""
+    return moteur._capture_hooks_batch(list(couches), last=last)
+
+
 def patch_hook(moteur, couche: int, position: int, vecteur: torch.Tensor):
     """Contexte : remplace la sortie de `couche` à `position` (premier passage)."""
     return moteur._patch_hook(couche, position, vecteur)
+
+
+@contextlib.contextmanager
+def steer_hook(
+    moteur,
+    couche: int,
+    vecteur: Union[np.ndarray, torch.Tensor],
+    alpha: float = 1.0,
+    t_debut: int = 0,
+) -> Iterator[None]:
+    """Contexte : ajoute alpha·vecteur à la sortie de `couche` à la dernière position, à chaque passage du modèle dès le
+    t_debut-ième (steering soutenu, comme Zur et al. 2025 ; le moteur n'a que des hooks de capture et de remplacement).
+
+    Passage 0 = préremplissage : il calcule la loi du jeton 0 depuis le dernier jeton du prompt. Passage s ≥ 1 : lecture du
+    jeton s − 1 (avec KV-cache, une seule position), qui calcule la loi du jeton s. t_debut = 0 : l'ajout porte donc sur
+    toutes les positions qui produisent un jeton, dont la dernière du prompt ; t_debut = k : dès la production du jeton k.
+    Avec le KV-cache, les clés et valeurs des couches suivantes calculées depuis l'état modifié restent en cache : l'effet
+    persiste, comme avec un recalcul complet où l'on ajouterait le vecteur à ces positions.
+
+    `vecteur` : (d,) pour tout le lot, ou (n, d), une ligne par suite du lot. alpha = 0 : sortie inchangée (identité).
+    Le compteur de passages repart de zéro à chaque entrée dans le contexte : un contexte par appel de génération.
+    """
+    v = torch.as_tensor(np.asarray(vecteur) if not isinstance(vecteur, torch.Tensor) else vecteur)
+    etat = {"passage": 0}
+
+    def hook(module, inputs, output):
+        k = etat["passage"]
+        etat["passage"] += 1
+        if alpha == 0.0 or k < t_debut:
+            return output
+        h, rest = moteur._split_output(output)
+        h = h.clone()
+        d = (alpha * v).to(device=h.device, dtype=h.dtype)
+        h[:, -1, :] = h[:, -1, :] + d
+        return h if rest is None else (h,) + rest
+
+    handle = moteur._decoder_layers()[couche].register_forward_hook(hook)
+    try:
+        yield
+    finally:
+        handle.remove()
 
 
 def js_exacte(p: torch.Tensor, q: torch.Tensor) -> torch.Tensor:
@@ -237,7 +286,7 @@ def paires_du_type(paires: List[Dict[str, Any]], detail: str) -> List[Dict[str, 
 __all__ = [
     "PROTOCOLES", "BifurcationResult", "PatchResult", "Trajectory", "TrajectoryBifurcationEngine",
     "version_moteur", "reglages_moteur", "verifier_moteur", "construire_moteur",
-    "capture_hooks", "patch_hook", "js_exacte", "generateur", "generer_trajectoire", "cartographier",
+    "capture_hooks", "capture_hooks_lot", "patch_hook", "steer_hook", "js_exacte", "generateur", "generer_trajectoire", "cartographier",
     "PARAMETRES_CARTE",
     "resume_paire", "type_detaille", "paires_du_type",
 ]
