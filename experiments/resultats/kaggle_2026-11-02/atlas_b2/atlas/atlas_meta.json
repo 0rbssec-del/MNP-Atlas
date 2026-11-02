@@ -1,0 +1,70 @@
+{
+  "name": "b2",
+  "created_at": "2026-11-02T21:22:14.050143Z",
+  "core_version": "0.2.1",
+  "atlas_version": "0.4",
+  "n_entries": 0,
+  "n_cartes": 2,
+  "summary": {
+    "n_entries": 0,
+    "atlas_version": "0.4",
+    "n_cartes": 2,
+    "cartes": [
+      {
+        "nom": "Qwen3-1.7B-Base",
+        "modele": "Qwen/Qwen3-1.7B-Base",
+        "couche": 17,
+        "representation": "rejouee",
+        "n_prompts": 64,
+        "regimes": {
+          "pi": 0.1875,
+          "pi_ci": [
+            0.11064534880922097,
+            0.29974591554775176
+          ],
+          "n_multi": 12,
+          "nul": 0.0,
+          "puissance": 1.0,
+          "verdict": "MIXTE"
+        },
+        "n_multimodaux": 12,
+        "valeur_ajoutee": {
+          "NON TESTABLE (une seule classe ou trop peu d'exemples)": 4,
+          "INDÉTERMINÉE": 5,
+          "AUCUNE": 3
+        },
+        "prefixe_k_trouve": 3,
+        "prefixe_gain_max_median": 0.17382812500000006,
+        "suites_distinctes_median": 1.0
+      },
+      {
+        "nom": "SmolLM3-3B-Base",
+        "modele": "HuggingFaceTB/SmolLM3-3B-Base",
+        "couche": 23,
+        "representation": "rejouee",
+        "n_prompts": 64,
+        "regimes": {
+          "pi": 0.140625,
+          "pi_ci": [
+            0.07578487006414436,
+            0.24616508394637426
+          ],
+          "n_multi": 9,
+          "nul": 0.0,
+          "puissance": 1.0,
+          "verdict": "MIXTE"
+        },
+        "n_multimodaux": 9,
+        "valeur_ajoutee": {
+          "NON TESTABLE (une seule classe ou trop peu d'exemples)": 6,
+          "INDÉTERMINÉE": 3
+        },
+        "prefixe_k_trouve": 1,
+        "prefixe_gain_max_median": 0.1880208333333333,
+        "suites_distinctes_median": 1.0
+      }
+    ]
+  },
+  "entry_summaries": [],
+  "provenance": []
+}
