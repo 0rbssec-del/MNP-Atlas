@@ -257,12 +257,16 @@ def rapport(res, layers):
 
 
 def main():
+    global SEED
     ap = argparse.ArgumentParser()
     ap.add_argument("--model", default="Qwen/Qwen2.5-1.5B")
     ap.add_argument("--prompts", default=str(ROOT / "experiments" / "data" / "akarlar_selected_prompts.json"))
     ap.add_argument("--dtype", default=None, choices=[None, "float16", "bfloat16", "float32"])
     ap.add_argument("--out", default="bassin_akarlar.json")
+    ap.add_argument("--seed", type=int, default=None, help="graine de base (nouvelle graine = échantillon frais)")
     args = ap.parse_args()
+    if args.seed is not None:
+        SEED = args.seed
     dt = getattr(torch, args.dtype) if args.dtype else None    # défaut du moteur : fp16 sur T4, fp32 sur CPU
     eng = TrajectoryBifurcationEngine(model_name=args.model, sampler="gumbel", temperature=TEMPERATURE, top_p=1.0,
                                       chat=False, forbid_special=False, torch_dtype=dt, seed=SEED,
