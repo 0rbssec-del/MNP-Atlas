@@ -1,0 +1,166 @@
+6.2s 1 0.00s - Debugger warning: It seems that frozen modules are being used, which may
+6.2s 2 0.00s - make the debugger miss breakpoints. Please pass -Xfrozen_modules=off
+6.2s 3 0.00s - to python to disable frozen modules.
+6.2s 4 0.00s - Note: Debugging will proceed. Set PYDEVD_DISABLE_FILE_VALIDATION=1 to disable this validation.
+6.8s 5 0.00s - Debugger warning: It seems that frozen modules are being used, which may
+6.8s 6 0.00s - make the debugger miss breakpoints. Please pass -Xfrozen_modules=off
+6.8s 7 0.00s - to python to disable frozen modules.
+6.8s 8 0.00s - Note: Debugging will proceed. Set PYDEVD_DISABLE_FILE_VALIDATION=1 to disable this validation.
+13.1s 9 /tmp/ipykernel_23/3429740528.py:749: DeprecationWarning: Python 3.14 will, by default, filter extracted tar archives and reject files or modify their metadata. Use the filter argument to control this behavior.
+13.1s 10 t.extractall(D)
+13.1s 11 
+13.1s 12 /tmp/ipykernel_23/3429740528.py:749: DeprecationWarning: Python 3.14 will, by default, filter extracted tar archives and reject files or modify their metadata. Use the filter argument to control this behavior.
+13.1s 13 t.extractall(D)
+13.1s 14 2 GPU : ['Tesla T4', 'Tesla T4']
+13.1s 15 # Test du bassin d'Akarlar sur deux modèles plus gros (Qwen2.5-7B, OLMo-2-7B)
+13.1s 16 
+13.1s 17 Écrit le 3 nov. 2026, **avant toute exécution**. Le commit de ce fichier date les critères.
+13.1s 18 
+13.1s 19 ## Pourquoi
+13.1s 20 
+13.1s 21 Sur Qwen2.5-1.5B (le modèle de l'article), le test direct du bassin est symétrique : A = −0,10 [−0,28 ; +0,08] sur les
+13.1s 22 27 prompts qui bifurquent (`BASSIN_27.md`, résultats `resultats/kaggle_2026-11-03/`). La limite principale de la note de
+13.1s 23 réplication est : un seul modèle. Ce test demande si le résultat tient sur des modèles plus gros, d'une même famille
+13.1s 24 (Qwen2.5-7B, même famille que l'article) et d'une autre famille (OLMo-2-7B, données et entraînement ouverts).
+13.1s 25 
+13.1s 26 ## Modèles
+13.1s 27 
+13.1s 28 - `Qwen/Qwen2.5-7B` (base), 28 couches ;
+13.1s 29 - `allenai/OLMo-2-1124-7B` (base), 32 couches.
+13.1s 30 
+13.1s 31 En fp16 (T4 sans bf16), chacun fait environ 15 Go et ne tient pas sur une seule T4 : il est réparti sur les deux GPU
+13.1s 32 (`device_map="auto"`), et les deux modèles tournent l'un après l'autre.
+13.1s 33 
+13.1s 34 ## Montage et critères
+13.1s 35 
+13.1s 36 Identiques à `bassin_akarlar.py` et `BASSIN_27.md`, sans changement de règle :
+13.1s 37 
+13.1s 38 - les 27 prompts qui bifurquent chez Akarlar (`data/akarlar_bifurcating_prompts.json`), son classifieur, T = 0,7,
+13.1s 39 15 jetons au plus, réservoir de 60 trajectoires, jusqu'à 6 paires par prompt, 24 graines par paire et par direction ;
+13.1s 40 - patch persistant, échange de jeton, auto-patch, nombres aléatoires communs, Δ en log-odds, A = Δ_C→H moyen − Δ_H→C
+13.1s 41 moyen, IC95 par bootstrap des paires stratifié par prompt ;
+13.1s 42 - mêmes témoins et mêmes verdicts (ASYMÉTRIE COMME L'ARTICLE, ASYMÉTRIE INVERSE, SYMÉTRIQUE, INDÉTERMINÉ).
+13.1s 43 
+13.1s 44 Trois adaptations, fixées ici :
+13.1s 45 
+13.1s 46 1. **Couches à la même profondeur relative** (`--couches-relatives`) : arrondi de l × (N − 1) / 27 pour
+13.1s 47 l ∈ {0, 6, 12, 18, 20, 24, 27}. Qwen2.5-7B (28 couches) : mêmes couches ; OLMo-2-7B (32 couches) : 0, 7, 14, 21, 23,
+13.1s 48 28, 31, auto-patch à L23.
+13.1s 49 2. **Seuil de paires** (`--min-paires 40`) : un modèle plus gros connaît mieux les faits, et certains prompts ne
+13.1s 50 bifurqueront plus. En dessous de 40 paires discordantes, le verdict est NON TESTABLE pour ce modèle.
+13.1s 51 3. **Lots de 96** (`--lot 96`) pour la vitesse ; la taille des lots ne change pas les nombres aléatoires (graine par
+13.1s 52 ligne et par pas).
+13.1s 53 
+13.1s 54 Graine : 20261104 pour les deux modèles (échantillon frais).
+13.1s 55 
+13.1s 56 ## Puissance
+13.1s 57 
+13.1s 58 Si un modèle fournit autant de paires que Qwen2.5-1.5B (162), la demi-largeur attendue de l'IC de A est d'environ 0,18
+13.1s 59 (observée sur 27 prompts). Avec 40 à 80 paires, elle serait plutôt de 0,25 à 0,35 [hypothèse
+13.4s 60 Pas de secret HF_TOKEN (téléchargement plus lent) : BackendError
+32.8s 61 Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+229.3s 62 [RÉPARTITION] ['0', '1']
+229.3s 63 [Core] Couches suivies : [0, 14, 27]
+229.3s 64 [Core] Échantillonneur : gumbel, T = 0.7, top-p = 1.0 ; chat = False
+229.3s 65 [COUCHES] 28 couches ; patch aux couches [0, 6, 12, 18, 20, 24, 27] ; auto-patch à L20
+229.3s 66 [ 6] réservoir {'CORRECT': 28, 'HALLUCINATION': 31, 'OTHER': 1} ; 6 paires ; 84 s
+309.4s 67 [ 7] réservoir {'CORRECT': 34, 'HALLUCINATION': 11, 'OTHER': 15} ; 6 paires ; 80 s
+389.1s 68 [ 9] réservoir {'CORRECT': 8, 'HALLUCINATION': 40, 'OTHER': 12} ; 6 paires ; 80 s
+471.8s 69 [10] réservoir {'CORRECT': 8, 'HALLUCINATION': 30, 'OTHER': 22} ; 6 paires ; 83 s
+578.3s 70 [14] réservoir {'CORRECT': 19, 'HALLUCINATION': 7, 'OTHER': 34} ; 6 paires ; 106 s
+683.2s 71 [15] réservoir {'CORRECT': 6, 'HALLUCINATION': 24, 'OTHER': 30} ; 6 paires ; 105 s
+783.2s 72 [16] réservoir {'CORRECT': 5, 'HALLUCINATION': 25, 'OTHER': 30} ; 6 paires ; 100 s
+866.4s 73 [18] réservoir {'CORRECT': 21, 'HALLUCINATION': 38, 'OTHER': 1} ; 6 paires ; 83 s
+956.2s 74 [19] réservoir {'CORRECT': 5, 'HALLUCINATION': 35, 'OTHER': 20} ; 6 paires ; 90 s
+1046.2s 75 [20] réservoir {'CORRECT': 11, 'HALLUCINATION': 48, 'OTHER': 1} ; 6 paires ; 90 s
+1147.4s 76 [21] réservoir {'CORRECT': 4, 'HALLUCINATION': 39, 'OTHER': 17} ; 6 paires ; 101 s
+1237.4s 77 [22] réservoir {'CORRECT': 2, 'HALLUCINATION': 57, 'OTHER': 1} ; 6 paires ; 90 s
+1327.3s 78 [23] réservoir {'CORRECT': 27, 'HALLUCINATION': 32, 'OTHER': 1} ; 6 paires ; 90 s
+1427.4s 79 [24] réservoir {'CORRECT': 28, 'HALLUCINATION': 21, 'OTHER': 11} ; 6 paires ; 100 s
+1429.8s 80 [paires] 25 : aucune paire discordante
+1534.9s 81 [27] réservoir {'CORRECT': 3, 'HALLUCINATION': 41, 'OTHER': 16} ; 6 paires ; 105 s
+1628.9s 82 [29] réservoir {'CORRECT': 4, 'HALLUCINATION': 56, 'OTHER': 0} ; 6 paires ; 94 s
+1631.2s 83 [paires] 30 : aucune paire discordante
+1731.2s 84 [32] réservoir {'CORRECT': 14, 'HALLUCINATION': 46, 'OTHER': 0} ; 6 paires ; 100 s
+1836.1s 85 [34] réservoir {'CORRECT': 1, 'HALLUCINATION': 59, 'OTHER': 0} ; 6 paires ; 105 s
+1936.2s 86 [40] réservoir {'CORRECT': 2, 'HALLUCINATION': 57, 'OTHER': 1} ; 6 paires ; 100 s
+2074.4s 87 [41] réservoir {'CORRECT': 8, 'HALLUCINATION': 50, 'OTHER': 2} ; 6 paires ; 138 s
+2201.1s 88 [42] réservoir {'CORRECT': 11, 'HALLUCINATION': 47, 'OTHER': 2} ; 6 paires ; 127 s
+2318.1s 89 [44] réservoir {'CORRECT': 4, 'HALLUCINATION': 55, 'OTHER': 1} ; 6 paires ; 117 s
+2430.0s 90 [51] réservoir {'CORRECT': 51, 'HALLUCINATION': 3, 'OTHER': 6} ; 6 paires ; 112 s
+2529.5s 91 [57] réservoir {'CORRECT': 30, 'HALLUCINATION': 1, 'OTHER': 29} ; 6 paires ; 100 s
+2612.4s 92 [59] réservoir {'CORRECT': 19, 'HALLUCINATION': 9, 'OTHER': 32} ; 6 paires ; 83 s
+2624.4s 93 [PAIRES] 150 paires sur 25 prompts (minimum fixé : 40)
+2624.4s 94 [TÉMOIN −] auto-patch à L20 identique à la base : 99.7%
+2624.4s 95 [C->H] taux sans patch 0.48 ; échange de jeton 0.69 (Δ +0.91 [+0.71 ; +1.10])
+2624.4s 96 [C->H] Δ log-odds par couche : L0 +0.02 [-0.08 ; +0.12] ; L6 +0.02 [-0.09 ; +0.14] ; L12 +0.00 [-0.11 ; +0.11] ; L18 +0.02 [-0.07 ; +0.10] ; L20 +0.03 [-0.05 ; +0.12] ; L24 +0.03 [-0.04 ; +0.11] ; L27 +0.04 [-0.04 ; +0.12]
+2624.4s 97 [C->H] Δ moyen +0.02 [-0.06 ; +0.11]
+2624.4s 98 [H->C] taux sans patch 0.19 ; échange de jeton 0.34 (Δ +0.80 [+0.64 ; +0.96])
+2624.4s 99 [H->C] Δ log-odds par couche : L0 +0.23 [+0.04 ; +0.42] ; L6 +0.11 [-0.08 ; +0.30] ; L12 +0.08 [-0.10 ; +0.25] ; L18 -0.06 [-0.24 ; +0.11] ; L20 -0.16 [-0.35 ; +0.02] ; L24 -0.25 [-0.44 ; -0.07] ; L27 -0.22 [-0.41 ; -0.05]
+2624.4s 100 [H->C] Δ moyen -0.04 [-0.20 ; +0.12]
+2624.4s 101 [A] asymétrie Δ_C→H − Δ_H→C = +0.06 [-0.13 ; +0.26] → SYMÉTRIQUE
+2624.4s 102 [P2] Δ_H→C moyen → P2 NON CONFIRMÉ
+2624.4s 103 [STRICT] classement en mots entiers : A = +0.11 → SYMÉTRIQUE
+2624.4s 104 [DESCRIPTIF] même deuxième jeton sans patch et après échange du premier : 7.5%
+2624.4s 105 [SORTIE] /kaggle/working/bassin_qwen7b.json (41.3 min)
+2627.6s 106 overlay         8.0T  7.1T  953G  89% /
+2637.3s 107 Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+2974.6s 108 [RÉPARTITION] ['0', '1']
+2974.6s 109 [Core] Couches suivies : [0, 16, 31]
+2974.6s 110 [Core] Échantillonneur : gumbel, T = 0.7, top-p = 1.0 ; chat = False
+2974.6s 111 [COUCHES] 32 couches ; patch aux couches [0, 7, 14, 21, 23, 28, 31] ; auto-patch à L23
+2974.6s 112 [ 6] réservoir {'CORRECT': 12, 'HALLUCINATION': 47, 'OTHER': 1} ; 6 paires ; 88 s
+2976.5s 113 [paires] 7 : aucune paire discordante
+3053.8s 114 [ 9] réservoir {'CORRECT': 36, 'HALLUCINATION': 21, 'OTHER': 3} ; 6 paires ; 77 s
+3136.7s 115 [10] réservoir {'CORRECT': 43, 'HALLUCINATION': 16, 'OTHER': 1} ; 6 paires ; 83 s
+3240.1s 116 [14] réservoir {'CORRECT': 5, 'HALLUCINATION': 35, 'OTHER': 20} ; 6 paires ; 103 s
+3336.9s 117 [15] réservoir {'CORRECT': 5, 'HALLUCINATION': 8, 'OTHER': 47} ; 6 paires ; 97 s
+3425.8s 118 [16] réservoir {'CORRECT': 10, 'HALLUCINATION': 18, 'OTHER': 32} ; 6 paires ; 89 s
+3509.3s 119 [18] réservoir {'CORRECT': 17, 'HALLUCINATION': 37, 'OTHER': 6} ; 6 paires ; 83 s
+3596.2s 120 [19] réservoir {'CORRECT': 8, 'HALLUCINATION': 33, 'OTHER': 19} ; 6 paires ; 87 s
+3683.3s 121 [20] réservoir {'CORRECT': 9, 'HALLUCINATION': 49, 'OTHER': 2} ; 6 paires ; 87 s
+3777.1s 122 [21] réservoir {'CORRECT': 10, 'HALLUCINATION': 41, 'OTHER': 9} ; 6 paires ; 94 s
+3835.7s 123 [22] réservoir {'CORRECT': 4, 'HALLUCINATION': 55, 'OTHER': 1} ; 4 paires ; 59 s
+3922.8s 124 [23] réservoir {'CORRECT': 26, 'HALLUCINATION': 34, 'OTHER': 0} ; 6 paires ; 87 s
+4014.7s 125 [24] réservoir {'CORRECT': 20, 'HALLUCINATION': 31, 'OTHER': 9} ; 6 paires ; 92 s
+4106.5s 126 [25] réservoir {'CORRECT': 5, 'HALLUCINATION': 52, 'OTHER': 3} ; 6 paires ; 92 s
+4203.2s 127 [27] réservoir {'CORRECT': 12, 'HALLUCINATION': 26, 'OTHER': 22} ; 6 paires ; 97 s
+4292.1s 128 [29] réservoir {'CORRECT': 4, 'HALLUCINATION': 56, 'OTHER': 0} ; 6 paires ; 89 s
+4384.0s 129 [30] réservoir {'CORRECT': 2, 'HALLUCINATION': 51, 'OTHER': 7} ; 6 paires ; 92 s
+4476.0s 130 [32] réservoir {'CORRECT': 15, 'HALLUCINATION': 45, 'OTHER': 0} ; 6 paires ; 92 s
+4572.6s 131 [34] réservoir {'CORRECT': 3, 'HALLUCINATION': 57, 'OTHER': 0} ; 6 paires ; 97 s
+4574.9s 132 [paires] 40 : aucune paire discordante
+4698.5s 133 [41] réservoir {'CORRECT': 3, 'HALLUCINATION': 54, 'OTHER': 3} ; 6 paires ; 124 s
+4815.4s 134 [42] réservoir {'CORRECT': 9, 'HALLUCINATION': 49, 'OTHER': 2} ; 6 paires ; 117 s
+4922.3s 135 [44] réservoir {'CORRECT': 7, 'HALLUCINATION': 53, 'OTHER': 0} ; 6 paires ; 107 s
+5027.3s 136 [51] réservoir {'CORRECT': 54, 'HALLUCINATION': 2, 'OTHER': 4} ; 6 paires ; 105 s
+5029.4s 137 [paires] 57 : aucune paire discordante
+5031.4s 138 [paires] 59 : aucune paire discordante
+5042.4s 139 [PAIRES] 136 paires sur 23 prompts (minimum fixé : 40)
+5042.4s 140 [TÉMOIN −] auto-patch à L20 identique à la base : 99.9%
+5042.4s 141 [C->H] taux sans patch 0.54 ; échange de jeton 0.76 (Δ +0.98 [+0.75 ; +1.22])
+5042.4s 142 [C->H] Δ log-odds par couche : L0 +0.14 [+0.02 ; +0.26] ; L7 +0.19 [+0.08 ; +0.30] ; L14 +0.20 [+0.09 ; +0.31] ; L21 +0.07 [-0.03 ; +0.16] ; L23 +0.06 [-0.03 ; +0.15] ; L28 +0.08 [-0.02 ; +0.17] ; L31 +0.08 [-0.02 ; +0.17]
+5042.4s 143 [C->H] Δ moyen +0.12 [+0.02 ; +0.20]
+5042.4s 144 [H->C] taux sans patch 0.16 ; échange de jeton 0.34 (Δ +0.96 [+0.79 ; +1.13])
+5042.4s 145 [H->C] Δ log-odds par couche : L0 +0.28 [+0.08 ; +0.49] ; L7 +0.30 [+0.10 ; +0.51] ; L14 +0.27 [+0.09 ; +0.44] ; L21 +0.17 [-0.03 ; +0.35] ; L23 +0.15 [-0.04 ; +0.33] ; L28 +0.09 [-0.08 ; +0.26] ; L31 +0.11 [-0.06 ; +0.27]
+5042.4s 146 [H->C] Δ moyen +0.20 [+0.02 ; +0.37]
+5042.4s 147 [A] asymétrie Δ_C→H − Δ_H→C = -0.08 [-0.25 ; +0.10] → SYMÉTRIQUE
+5042.4s 148 [P2] Δ_H→C moyen → P2 CONFIRMÉ
+5042.4s 149 [STRICT] classement en mots entiers : A = -0.22 → ASYMÉTRIE INVERSE
+5042.4s 150 [DESCRIPTIF] même deuxième jeton sans patch et après échange du premier : 7.3%
+5042.4s 151 [SORTIE] /kaggle/working/bassin_olmo7b.json (35.9 min)
+5045.6s 152 total 16836
+5045.6s 153 drwxr-xr-x 3 root root    4096 Nov  3 03:30 .
+5045.6s 154 drwxr-xr-x 8 root root    4096 Nov  3 02:06 ..
+5045.6s 155 -rw-r--r-- 1 root root 8169530 Nov  3 03:30 bassin_olmo7b.json
+5045.6s 156 -rw-r--r-- 1 root root 8941806 Nov  3 02:49 bassin_qwen7b.json
+5045.6s 157 drwxr-xr-x 5 root root    4096 Nov  3 02:06 MNP-Atlas
+5045.6s 158 -rw-r--r-- 1 root root  110471 Nov  3 03:30 __notebook__.ipynb
+5048.8s 159 /usr/local/lib/python3.13/dist-packages/mistune.py:435: SyntaxWarning: invalid escape sequence '\|'
+5048.8s 160 cells[i][c] = re.sub('\\\\\|', '|', cell)
+5049.0s 161 /usr/local/lib/python3.13/dist-packages/nbconvert/filters/filter_links.py:36: SyntaxWarning: invalid escape sequence '\_'
+5049.0s 162 text = re.sub(r'_', '\_', text) # Escape underscores in display text
+5049.9s 163 [NbConvertApp] Converting notebook __notebook__.ipynb to notebook
+5050.0s 164 [NbConvertApp] Writing 106448 bytes to __notebook__.ipynb
+5052.5s 165 [NbConvertApp] Converting notebook __notebook__.ipynb to html
+5053.1s 166 [NbConvertApp] Writing 393212 bytes to __results__.html
