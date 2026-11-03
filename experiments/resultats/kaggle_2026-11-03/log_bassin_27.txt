@@ -1,0 +1,98 @@
+7.4s 1 0.00s - Debugger warning: It seems that frozen modules are being used, which may
+7.4s 2 0.00s - make the debugger miss breakpoints. Please pass -Xfrozen_modules=off
+7.4s 3 0.00s - to python to disable frozen modules.
+7.4s 4 0.00s - Note: Debugging will proceed. Set PYDEVD_DISABLE_FILE_VALIDATION=1 to disable this validation.
+8.0s 5 0.00s - Debugger warning: It seems that frozen modules are being used, which may
+8.0s 6 0.00s - make the debugger miss breakpoints. Please pass -Xfrozen_modules=off
+8.0s 7 0.00s - to python to disable frozen modules.
+8.0s 8 0.00s - Note: Debugging will proceed. Set PYDEVD_DISABLE_FILE_VALIDATION=1 to disable this validation.
+15.9s 9 ['BASSIN_27.md', 'bassin_akarlar.py', 'data', 'replication_akarlar.py'] 2 GPU
+15.9s 10 # Test du bassin d'Akarlar sur les 27 prompts qui bifurquent — réplication de confirmation
+15.9s 11 
+15.9s 12 Écrit le 3 nov. 2026, **avant toute exécution**. Le commit de ce fichier date les critères.
+15.9s 13 
+15.9s 14 ## Pourquoi
+15.9s 15 
+15.9s 16 Premier test du bassin (2 nov., 8 prompts, 48 paires, graine 20261101, résultats dans
+15.9s 17 `resultats/kaggle_2026-11-02/bassin_akarlar.json`) : A = −0,25 [−0,51 ; +0,02], INDÉTERMINÉ. La largeur de l'intervalle
+15.9s 18 vient surtout du nombre de prompts : le bootstrap est stratifié par prompt et la variance passe par eux.
+15.9s 19 
+15.9s 20 Ce test-ci est une **réplication de confirmation** : un échantillon frais (nouvelle graine, nouveaux réservoirs, nouvelles
+15.9s 21 paires), sur les **27 prompts qui bifurquent** chez Akarlar (20 tirages à T = 0,7, au moins 2 corrects et 2 hallucinés,
+15.9s 22 fichier `bifurcation_Qwen_Qwen2.5-1.5B.json` de son dépôt). Les données du 2 nov. ne sont **pas** ajoutées : elles ont
+15.9s 23 servi à choisir la taille de l'échantillon.
+15.9s 24 
+15.9s 25 ## Données
+15.9s 26 
+15.9s 27 `data/akarlar_bifurcating_prompts.json` : les 27 prompts, avec les listes `ground_truth` et `wrong_indicators` de son
+15.9s 28 classifieur, extraites sans exécution (analyse `ast`) de `multitoken_hallucination.py`. Les 8 prompts du premier test en
+15.9s 29 font partie, avec des listes identiques (vérifié). Catégories : 12 fausses prémisses, 8 confabulations, 4 factuels,
+15.9s 30 2 calculs, 1 question orientée.
+15.9s 31 
+15.9s 32 ## Montage et critères
+15.9s 33 
+15.9s 34 Identiques à `bassin_akarlar.py` (en-tête du script, commit 0af62ba), sans aucun changement de règle :
+15.9s 35 
+15.9s 36 - Qwen2.5-1.5B de base, T = 0,7, 15 jetons au plus, cla
+15.9s 37 /tmp/ipykernel_24/1156741561.py:741: DeprecationWarning: Python 3.14 will, by default, filter extracted tar archives and reject files or modify their metadata. Use the filter argument to control this behavior.
+15.9s 38 t.extractall(D)
+15.9s 39 
+15.9s 40 /tmp/ipykernel_24/1156741561.py:741: DeprecationWarning: Python 3.14 will, by default, filter extracted tar archives and reject files or modify their metadata. Use the filter argument to control this behavior.
+15.9s 41 t.extractall(D)
+38.7s 42 Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+60.0s 43 [Core] Chargement de Qwen/Qwen2.5-1.5B sur cuda...
+120.0s 44 [Core] Couches suivies : [0, 14, 27]
+120.0s 45 [Core] Échantillonneur : gumbel, T = 0.7, top-p = 1.0 ; chat = False
+120.0s 46 [ 6] réservoir {'CORRECT': 8, 'HALLUCINATION': 50, 'OTHER': 2} ; 6 paires ; 56 s
+173.1s 47 [ 7] réservoir {'CORRECT': 20, 'HALLUCINATION': 23, 'OTHER': 17} ; 6 paires ; 53 s
+225.7s 48 [ 9] réservoir {'CORRECT': 3, 'HALLUCINATION': 43, 'OTHER': 14} ; 6 paires ; 53 s
+277.9s 49 [10] réservoir {'CORRECT': 9, 'HALLUCINATION': 39, 'OTHER': 12} ; 6 paires ; 52 s
+336.4s 50 [14] réservoir {'CORRECT': 18, 'HALLUCINATION': 9, 'OTHER': 33} ; 6 paires ; 59 s
+394.4s 51 [15] réservoir {'CORRECT': 3, 'HALLUCINATION': 10, 'OTHER': 47} ; 6 paires ; 58 s
+451.2s 52 [16] réservoir {'CORRECT': 11, 'HALLUCINATION': 17, 'OTHER': 32} ; 6 paires ; 57 s
+503.5s 53 [18] réservoir {'CORRECT': 17, 'HALLUCINATION': 42, 'OTHER': 1} ; 6 paires ; 52 s
+557.7s 54 [19] réservoir {'CORRECT': 2, 'HALLUCINATION': 36, 'OTHER': 22} ; 6 paires ; 54 s
+611.7s 55 [20] réservoir {'CORRECT': 8, 'HALLUCINATION': 52, 'OTHER': 0} ; 6 paires ; 54 s
+667.7s 56 [21] réservoir {'CORRECT': 3, 'HALLUCINATION': 44, 'OTHER': 13} ; 6 paires ; 56 s
+721.3s 57 [22] réservoir {'CORRECT': 8, 'HALLUCINATION': 51, 'OTHER': 1} ; 6 paires ; 54 s
+774.8s 58 [23] réservoir {'CORRECT': 26, 'HALLUCINATION': 34, 'OTHER': 0} ; 6 paires ; 54 s
+830.6s 59 [24] réservoir {'CORRECT': 17, 'HALLUCINATION': 25, 'OTHER': 18} ; 6 paires ; 56 s
+886.8s 60 [25] réservoir {'CORRECT': 18, 'HALLUCINATION': 41, 'OTHER': 1} ; 6 paires ; 56 s
+943.7s 61 [27] réservoir {'CORRECT': 12, 'HALLUCINATION': 32, 'OTHER': 16} ; 6 paires ; 57 s
+998.0s 62 [29] réservoir {'CORRECT': 1, 'HALLUCINATION': 59, 'OTHER': 0} ; 6 paires ; 54 s
+1054.5s 63 [30] réservoir {'CORRECT': 1, 'HALLUCINATION': 51, 'OTHER': 8} ; 6 paires ; 56 s
+1110.6s 64 [32] réservoir {'CORRECT': 14, 'HALLUCINATION': 46, 'OTHER': 0} ; 6 paires ; 56 s
+1167.6s 65 [34] réservoir {'CORRECT': 2, 'HALLUCINATION': 58, 'OTHER': 0} ; 6 paires ; 57 s
+1224.0s 66 [40] réservoir {'CORRECT': 1, 'HALLUCINATION': 59, 'OTHER': 0} ; 6 paires ; 56 s
+1288.0s 67 [41] réservoir {'CORRECT': 8, 'HALLUCINATION': 51, 'OTHER': 1} ; 6 paires ; 64 s
+1349.7s 68 [42] réservoir {'CORRECT': 13, 'HALLUCINATION': 46, 'OTHER': 1} ; 6 paires ; 62 s
+1410.5s 69 [44] réservoir {'CORRECT': 4, 'HALLUCINATION': 56, 'OTHER': 0} ; 6 paires ; 61 s
+1469.6s 70 [51] réservoir {'CORRECT': 29, 'HALLUCINATION': 21, 'OTHER': 10} ; 6 paires ; 59 s
+1525.9s 71 [57] réservoir {'CORRECT': 5, 'HALLUCINATION': 6, 'OTHER': 49} ; 6 paires ; 56 s
+1578.3s 72 [59] réservoir {'CORRECT': 11, 'HALLUCINATION': 1, 'OTHER': 48} ; 6 paires ; 52 s
+1591.8s 73 [TÉMOIN −] auto-patch à L20 identique à la base : 100.0%
+1591.8s 74 [C->H] taux sans patch 0.55 ; échange de jeton 0.67 (Δ +0.54 [+0.38 ; +0.71])
+1591.8s 75 [C->H] Δ log-odds par couche : L0 +0.08 [-0.04 ; +0.20] ; L6 -0.04 [-0.13 ; +0.07] ; L12 -0.03 [-0.13 ; +0.07] ; L18 -0.03 [-0.11 ; +0.05] ; L20 -0.01 [-0.10 ; +0.07] ; L24 -0.06 [-0.14 ; +0.03] ; L27 -0.04 [-0.13 ; +0.04]
+1591.8s 76 [C->H] Δ moyen -0.02 [-0.10 ; +0.06]
+1591.8s 77 [H->C] taux sans patch 0.15 ; échange de jeton 0.28 (Δ +0.80 [+0.63 ; +0.97])
+1591.8s 78 [H->C] Δ log-odds par couche : L0 +0.27 [+0.08 ; +0.46] ; L6 +0.24 [+0.03 ; +0.43] ; L12 +0.27 [+0.10 ; +0.45] ; L18 +0.01 [-0.15 ; +0.17] ; L20 -0.03 [-0.19 ; +0.13] ; L24 -0.08 [-0.24 ; +0.09] ; L27 -0.13 [-0.29 ; +0.03]
+1591.8s 79 [H->C] Δ moyen +0.08 [-0.08 ; +0.23]
+1591.8s 80 [A] asymétrie Δ_C→H − Δ_H→C = -0.10 [-0.28 ; +0.08] → SYMÉTRIQUE
+1591.8s 81 [P2] Δ_H→C moyen → P2 NON CONFIRMÉ
+1591.8s 82 [STRICT] classement en mots entiers : A = -0.04 → SYMÉTRIQUE
+1591.8s 83 [DESCRIPTIF] même deuxième jeton sans patch et après échange du premier : 4.9%
+1591.8s 84 [SORTIE] /kaggle/working/bassin_27.json (25.5 min)
+1595.8s 85 total 9544
+1595.8s 86 drwxr-xr-x 3 root root    4096 Nov  3 01:18 .
+1595.8s 87 drwxr-xr-x 8 root root    4096 Nov  3 00:51 ..
+1595.8s 88 -rw-r--r-- 1 root root 9658874 Nov  3 01:18 bassin_27.json
+1595.8s 89 drwxr-xr-x 5 root root    4096 Nov  3 00:52 MNP-Atlas
+1595.8s 90 -rw-r--r-- 1 root root   97574 Nov  3 01:18 __notebook__.ipynb
+1598.9s 91 /usr/local/lib/python3.13/dist-packages/mistune.py:435: SyntaxWarning: invalid escape sequence '\|'
+1598.9s 92 cells[i][c] = re.sub('\\\\\|', '|', cell)
+1599.1s 93 /usr/local/lib/python3.13/dist-packages/nbconvert/filters/filter_links.py:36: SyntaxWarning: invalid escape sequence '\_'
+1599.1s 94 text = re.sub(r'_', '\_', text) # Escape underscores in display text
+1599.8s 95 [NbConvertApp] Converting notebook __notebook__.ipynb to notebook
+1599.9s 96 [NbConvertApp] Writing 95937 bytes to __notebook__.ipynb
+1602.4s 97 [NbConvertApp] Converting notebook __notebook__.ipynb to html
+1602.9s 98 [NbConvertApp] Writing 380808 bytes to __results__.html
