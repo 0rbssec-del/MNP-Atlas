@@ -1,0 +1,160 @@
+10.8s 1 0.00s - Debugger warning: It seems that frozen modules are being used, which may
+10.8s 2 0.00s - make the debugger miss breakpoints. Please pass -Xfrozen_modules=off
+10.8s 3 0.00s - to python to disable frozen modules.
+10.8s 4 0.00s - Note: Debugging will proceed. Set PYDEVD_DISABLE_FILE_VALIDATION=1 to disable this validation.
+11.5s 5 0.00s - Debugger warning: It seems that frozen modules are being used, which may
+11.5s 6 0.00s - make the debugger miss breakpoints. Please pass -Xfrozen_modules=off
+11.5s 7 0.00s - to python to disable frozen modules.
+11.5s 8 0.00s - Note: Debugging will proceed. Set PYDEVD_DISABLE_FILE_VALIDATION=1 to disable this validation.
+25.1s 9 /tmp/ipykernel_22/3897591198.py:815: DeprecationWarning: Python 3.14 will, by default, filter extracted tar archives and reject files or modify their metadata. Use the filter argument to control this behavior.
+25.1s 10 t.extractall(D)
+25.1s 11 
+25.1s 12 /tmp/ipykernel_22/3897591198.py:815: DeprecationWarning: Python 3.14 will, by default, filter extracted tar archives and reject files or modify their metadata. Use the filter argument to control this behavior.
+25.1s 13 t.extractall(D)
+25.1s 14 2 GPU : ['Tesla T4', 'Tesla T4']
+25.1s 15 # Test de confirmation du bassin : témoin même classe, couche fixée, bootstrap des prompts
+25.1s 16 
+25.1s 17 Écrit le 3 nov. 2026, **avant toute exécution**. Le commit de ce fichier date les critères.
+25.1s 18 
+25.1s 19 ## Pourquoi
+25.1s 20 
+25.1s 21 La relecture adverse de la note de réplication (3 nov.) a trouvé trois failles dans le test direct du bassin
+25.1s 22 (`bassin_akarlar.py`, résultats du 2 et du 3 nov.) :
+25.1s 23 
+25.1s 24 1. le bootstrap tenait les prompts pour fixes ; en les rééchantillonnant, les intervalles de A s'élargissent à environ ±0,4 ;
+25.1s 25 2. le patch persistant abîme le texte (part « Autre » de 0,14 à 0,26 sur Qwen2.5-7B), sans témoin pour séparer
+25.1s 26 « aller vers la source » de « casser la suite » ;
+25.1s 27 3. sur Qwen2.5-7B, A est positif aux couches tardives (L24 +0,29, non corrigé), seul indice dans le sens de l'article.
+25.1s 28 Avec le bootstrap des prompts, cet indice vaut +0,29 [−0,09 ; +0,63] (calcul fait avant ce test).
+25.1s 29 
+25.1s 30 Ce test vise ces trois points, sur le modèle et la couche de l'indice.
+25.1s 31 
+25.1s 32 ## Montage
+25.1s 33 
+25.1s 34 - **Modèle** : `Qwen/Qwen2.5-7B` (base), float16 réparti sur deux T4.
+25.1s 35 - **Prompts** : les **61 prompts** de l'article (`data/akarlar_all_prompts.json`, extraits sans exécution de son dépôt,
+25.1s 36 licence MIT), et non plus les seuls 27 qui bifurquent chez Qwen2.5-1.5B. Seuls ceux qui donnent au moins une paire
+25.1s 37 discordante dans un réservoir de 60 trajectoires servent ; plus de prompts réduisent l'incertitude due aux prompts.
+25.1s 38 - **Graine** : 20261105 (échantillon frais ; aucune donnée antérieure réutilisée).
+25.1s 39 - Comme `bassin_akarlar.py` : T = 0,7, 15 jetons au plus, classifieur d'Akarlar, jusqu'à 6 paires par prompt,
+25.1s 40 24 graines par paire et par direction, cible reconstruite, patch persistant, nombres aléatoires communs.
+25.1s 41 - **Conditions** :
+25.1s 42 - base, échange de jeton, auto-patch à L24 ;
+25.1s 43 - aux couches 20, 24 et 27, deux patchs :
+25.1s 44 - **croisé** : la source est un run de l'autre classe ;
+25.1s 45 - **même classe** : la source est un run de la **même classe** que la cible, avec un premier jeton différent. C'est le
+25.1s 46 premier run de la réserve qui remplit ces conditions. Ce patch mesure la perturbation due au patch lui-même.
+25.1s 47 
+25.1s 48 ## Critères
+25.1s 49 
+25.1s 50 **Statistique principale, à la couche fixée L24.** Les deux effets se calculent sur les unités (paire, direction) qui ont
+25.1s 51 une source même classe :
+25.1s 52 
+25.1s 53 E_C→H = logit p_H(croisé) − logit p_H(même classe)    sur les cibles correctes ;
+25.1s 54 E_H→C = logit p_C(croisé) − logit p_C(même classe)    sur les cibles hallucinées ;
+25.1s 55 A*    = E_C→H − E_H→C.
+25.1s 56 
+25.1s 57 L'article prédit que corrompre est plus facile que corriger, donc A* > 0.
+25.1s 58 
+25.1s 59 **IC95** : bootstrap à deux niveaux, d'abord les prompts, puis les paires dans chaque prompt (2000 tirages).
+25.1s 60 
+25.1s 61 **Verdict** :
+25.1s 62 - NON TESTABLE si moins de 40 unités par direction ont une source même classe ;
+25.1s 63 - NON INTERPRÉTABLE si l'auto-patch est identique à la base dans moins de 98 % des suites, ou si l'échange de jeton n'a
+25.1s 64 une borne basse > 0 dans aucune direction ;
+25.1s 65 - **ASYMÉTRIE COMME L'ARTICLE** si la borne basse de A* à L24 > 0 ;
+25.1s 66 - **ASYMÉTRIE INVERSE** si la borne
+25.3s 67 Pas de secret HF_TOKEN attaché (téléchargement plus lent) : BackendError
+58.7s 68 Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+251.4s 69 [Core] Couches suivies : [0, 14, 27]
+251.4s 70 [Core] Échantillonneur : gumbel, T = 0.7, top-p = 1.0 ; chat = False
+251.4s 71 [ 0] réservoir {'CORRECT': 19, 'HALLUCINATION': 13, 'OTHER': 28} ; 6 paires ; même classe {'C->H': 6, 'H->C': 6} ; 87 s
+341.3s 72 [ 1] réservoir {'CORRECT': 2, 'HALLUCINATION': 18, 'OTHER': 40} ; 6 paires ; même classe {'C->H': 6, 'H->C': 6} ; 90 s
+431.0s 73 [ 2] réservoir {'CORRECT': 34, 'HALLUCINATION': 11, 'OTHER': 15} ; 6 paires ; même classe {'C->H': 6, 'H->C': 6} ; 90 s
+522.7s 74 [ 3] réservoir {'CORRECT': 8, 'HALLUCINATION': 9, 'OTHER': 43} ; 6 paires ; même classe {'C->H': 6, 'H->C': 6} ; 92 s
+614.6s 75 [ 4] réservoir {'CORRECT': 3, 'HALLUCINATION': 21, 'OTHER': 36} ; 6 paires ; même classe {'C->H': 6, 'H->C': 6} ; 92 s
+707.1s 76 [ 5] réservoir {'CORRECT': 34, 'HALLUCINATION': 12, 'OTHER': 14} ; 6 paires ; même classe {'C->H': 6, 'H->C': 6} ; 92 s
+763.0s 77 [ 6] réservoir {'CORRECT': 38, 'HALLUCINATION': 20, 'OTHER': 2} ; 6 paires ; même classe {'C->H': 0, 'H->C': 0} ; 56 s
+836.5s 78 [ 7] réservoir {'CORRECT': 37, 'HALLUCINATION': 8, 'OTHER': 15} ; 6 paires ; même classe {'C->H': 6, 'H->C': 6} ; 74 s
+899.9s 79 [ 8] réservoir {'CORRECT': 39, 'HALLUCINATION': 1, 'OTHER': 20} ; 6 paires ; même classe {'C->H': 6, 'H->C': 0} ; 63 s
+973.7s 80 [ 9] réservoir {'CORRECT': 5, 'HALLUCINATION': 43, 'OTHER': 12} ; 6 paires ; même classe {'C->H': 6, 'H->C': 6} ; 74 s
+1049.9s 81 [10] réservoir {'CORRECT': 11, 'HALLUCINATION': 25, 'OTHER': 24} ; 6 paires ; même classe {'C->H': 6, 'H->C': 6} ; 76 s
+1142.8s 82 [11] réservoir {'CORRECT': 16, 'HALLUCINATION': 17, 'OTHER': 27} ; 6 paires ; même classe {'C->H': 6, 'H->C': 6} ; 93 s
+1235.8s 83 [12] réservoir {'CORRECT': 12, 'HALLUCINATION': 18, 'OTHER': 30} ; 6 paires ; même classe {'C->H': 6, 'H->C': 6} ; 93 s
+1328.6s 84 [13] réservoir {'CORRECT': 24, 'HALLUCINATION': 21, 'OTHER': 15} ; 6 paires ; même classe {'C->H': 6, 'H->C': 6} ; 93 s
+1426.3s 85 [14] réservoir {'CORRECT': 18, 'HALLUCINATION': 14, 'OTHER': 28} ; 6 paires ; même classe {'C->H': 6, 'H->C': 6} ; 98 s
+1508.4s 86 [15] réservoir {'CORRECT': 3, 'HALLUCINATION': 20, 'OTHER': 37} ; 6 paires ; même classe {'C->H': 6, 'H->C': 0} ; 82 s
+1599.9s 87 [16] réservoir {'CORRECT': 11, 'HALLUCINATION': 24, 'OTHER': 25} ; 6 paires ; même classe {'C->H': 6, 'H->C': 6} ; 92 s
+1629.4s 88 [17] réservoir {'CORRECT': 3, 'HALLUCINATION': 1, 'OTHER': 56} ; 2 paires ; même classe {'C->H': 2, 'H->C': 0} ; 30 s
+1705.9s 89 [18] réservoir {'CORRECT': 18, 'HALLUCINATION': 37, 'OTHER': 5} ; 6 paires ; même classe {'C->H': 6, 'H->C': 6} ; 76 s
+1788.6s 90 [19] réservoir {'CORRECT': 5, 'HALLUCINATION': 43, 'OTHER': 12} ; 6 paires ; même classe {'C->H': 6, 'H->C': 6} ; 83 s
+1871.3s 91 [20] réservoir {'CORRECT': 15, 'HALLUCINATION': 45, 'OTHER': 0} ; 6 paires ; même classe {'C->H': 6, 'H->C': 6} ; 83 s
+1964.2s 92 [21] réservoir {'CORRECT': 6, 'HALLUCINATION': 32, 'OTHER': 22} ; 6 paires ; même classe {'C->H': 6, 'H->C': 6} ; 93 s
+2035.0s 93 [22] réservoir {'CORRECT': 2, 'HALLUCINATION': 56, 'OTHER': 2} ; 6 paires ; même classe {'C->H': 0, 'H->C': 6} ; 71 s
+2117.8s 94 [23] réservoir {'CORRECT': 20, 'HALLUCINATION': 36, 'OTHER': 4} ; 6 paires ; même classe {'C->H': 6, 'H->C': 6} ; 83 s
+2209.6s 95 [24] réservoir {'CORRECT': 23, 'HALLUCINATION': 21, 'OTHER': 16} ; 6 paires ; même classe {'C->H': 6, 'H->C': 6} ; 92 s
+2300.7s 96 [25] réservoir {'CORRECT': 4, 'HALLUCINATION': 56, 'OTHER': 0} ; 6 paires ; même classe {'C->H': 6, 'H->C': 6} ; 91 s
+2383.5s 97 [26] réservoir {'CORRECT': 7, 'HALLUCINATION': 52, 'OTHER': 1} ; 6 paires ; même classe {'C->H': 6, 'H->C': 6} ; 83 s
+2479.6s 98 [27] réservoir {'CORRECT': 6, 'HALLUCINATION': 43, 'OTHER': 11} ; 6 paires ; même classe {'C->H': 6, 'H->C': 6} ; 96 s
+2482.2s 99 [paires] 28 : aucune paire discordante
+2568.3s 100 [29] réservoir {'CORRECT': 2, 'HALLUCINATION': 58, 'OTHER': 0} ; 6 paires ; même classe {'C->H': 6, 'H->C': 6} ; 86 s
+2570.7s 101 [paires] 30 : aucune paire discordante
+2573.3s 102 [paires] 31 : aucune paire discordante
+2664.7s 103 [32] réservoir {'CORRECT': 22, 'HALLUCINATION': 38, 'OTHER': 0} ; 6 paires ; même classe {'C->H': 6, 'H->C': 6} ; 91 s
+2667.1s 104 [paires] 33 : aucune paire discordante
+2763.3s 105 [34] réservoir {'CORRECT': 4, 'HALLUCINATION': 56, 'OTHER': 0} ; 6 paires ; même classe {'C->H': 6, 'H->C': 6} ; 96 s
+2854.9s 106 [35] réservoir {'CORRECT': 1, 'HALLUCINATION': 59, 'OTHER': 0} ; 6 paires ; même classe {'C->H': 0, 'H->C': 6} ; 92 s
+2946.1s 107 [36] réservoir {'CORRECT': 1, 'HALLUCINATION': 59, 'OTHER': 0} ; 6 paires ; même classe {'C->H': 0, 'H->C': 6} ; 91 s
+3029.6s 108 [37] réservoir {'CORRECT': 1, 'HALLUCINATION': 59, 'OTHER': 0} ; 6 paires ; même classe {'C->H': 0, 'H->C': 6} ; 83 s
+3124.3s 109 [38] réservoir {'CORRECT': 1, 'HALLUCINATION': 59, 'OTHER': 0} ; 6 paires ; même classe {'C->H': 0, 'H->C': 6} ; 95 s
+3126.9s 110 [paires] 39 : aucune paire discordante
+3218.0s 111 [40] réservoir {'CORRECT': 2, 'HALLUCINATION': 58, 'OTHER': 0} ; 6 paires ; même classe {'C->H': 6, 'H->C': 6} ; 91 s
+3345.0s 112 [41] réservoir {'CORRECT': 4, 'HALLUCINATION': 54, 'OTHER': 2} ; 6 paires ; même classe {'C->H': 6, 'H->C': 6} ; 127 s
+3461.3s 113 [42] réservoir {'CORRECT': 7, 'HALLUCINATION': 52, 'OTHER': 1} ; 6 paires ; même classe {'C->H': 6, 'H->C': 6} ; 116 s
+3581.5s 114 [43] réservoir {'CORRECT': 3, 'HALLUCINATION': 57, 'OTHER': 0} ; 6 paires ; même classe {'C->H': 6, 'H->C': 6} ; 120 s
+3688.8s 115 [44] réservoir {'CORRECT': 6, 'HALLUCINATION': 53, 'OTHER': 1} ; 6 paires ; même classe {'C->H': 6, 'H->C': 6} ; 107 s
+3691.6s 116 [paires] 45 : aucune paire discordante
+3694.3s 117 [paires] 46 : aucune paire discordante
+3697.1s 118 [paires] 47 : aucune paire discordante
+3699.6s 119 [paires] 48 : aucune paire discordante
+3702.7s 120 [paires] 49 : aucune paire discordante
+3797.1s 121 [50] réservoir {'CORRECT': 58, 'HALLUCINATION': 2, 'OTHER': 0} ; 6 paires ; même classe {'C->H': 6, 'H->C': 0} ; 94 s
+3799.8s 122 [paires] 51 : aucune paire discordante
+3802.5s 123 [paires] 52 : aucune paire discordante
+3805.2s 124 [paires] 53 : aucune paire discordante
+3881.1s 125 [54] réservoir {'CORRECT': 51, 'HALLUCINATION': 8, 'OTHER': 1} ; 6 paires ; même classe {'C->H': 6, 'H->C': 6} ; 76 s
+3883.7s 126 [paires] 55 : aucune paire discordante
+3954.6s 127 [56] réservoir {'CORRECT': 59, 'HALLUCINATION': 1, 'OTHER': 0} ; 6 paires ; même classe {'C->H': 6, 'H->C': 0} ; 71 s
+4032.4s 128 [57] réservoir {'CORRECT': 30, 'HALLUCINATION': 1, 'OTHER': 29} ; 6 paires ; même classe {'C->H': 6, 'H->C': 0} ; 78 s
+4034.6s 129 [paires] 58 : aucune paire discordante
+4110.7s 130 [59] réservoir {'CORRECT': 18, 'HALLUCINATION': 7, 'OTHER': 35} ; 6 paires ; même classe {'C->H': 6, 'H->C': 6} ; 76 s
+4193.3s 131 [60] réservoir {'CORRECT': 42, 'HALLUCINATION': 3, 'OTHER': 15} ; 6 paires ; même classe {'C->H': 6, 'H->C': 6} ; 83 s
+4222.4s 132 [PAIRES] 272 paires sur 46 prompts ; unités avec source même classe : {'C->H': 236, 'H->C': 234}
+4222.4s 133 [TÉMOIN −] auto-patch à L24 identique à la base : 99.8%
+4222.4s 134 [C->H] échange de jeton Δ +1.11 [+0.78 ; +1.52]
+4222.4s 135 [C->H] E (croisé − même classe) : L20 +0.16 [-0.02 ; +0.40] ; L24 +0.09 [-0.06 ; +0.28] ; L27 +0.11 [-0.04 ; +0.29]
+4222.4s 136 [C->H] croisé − base : L20 +0.21 ; L24 +0.15 ; L27 +0.15 | même classe − base : L20 +0.05 ; L24 +0.06 ; L27 +0.05
+4222.4s 137 [C->H] part « Autre » : base 0.13 ; echange 0.14 ; croise_L20 0.31 ; croise_L24 0.30 ; croise_L27 0.29 ; meme_L20 0.34 ; meme_L24 0.32 ; meme_L27 0.32
+4222.4s 138 [H->C] échange de jeton Δ +1.27 [+0.87 ; +1.77]
+4222.4s 139 [H->C] E (croisé − même classe) : L20 +0.50 [+0.16 ; +0.90] ; L24 +0.46 [+0.13 ; +0.86] ; L27 +0.49 [+0.16 ; +0.88]
+4222.4s 140 [H->C] croisé − base : L20 +0.35 ; L24 +0.32 ; L27 +0.39 | même classe − base : L20 -0.08 ; L24 -0.08 ; L27 -0.07
+4222.4s 141 [H->C] part « Autre » : base 0.13 ; echange 0.13 ; croise_L20 0.23 ; croise_L24 0.22 ; croise_L27 0.22 ; meme_L20 0.22 ; meme_L24 0.22 ; meme_L27 0.21
+4222.4s 142 [A*] asymétrie corrigée par le témoin même classe : L20 -0.34 [-0.70 ; -0.03] ; L24 -0.37 [-0.75 ; -0.04] ; L27 -0.39 [-0.77 ; -0.07]
+4222.4s 143 [A sans témoin, bootstrap des prompts] L20 -0.14 [-0.54 ; +0.25] ; L24 -0.17 [-0.59 ; +0.21] ; L27 -0.24 [-0.62 ; +0.12]
+4222.4s 144 [VERDICT] couche fixée L24 : ASYMÉTRIE INVERSE
+4222.4s 145 [STRICT] A* L24 = -0.31 [-0.74 ; +0.07] → INDÉTERMINÉ
+4222.4s 146 [SORTIE] /kaggle/working/bassin_confirmation.json (67.6 min)
+4229.2s 147 total 14392
+4229.2s 148 drwxr-xr-x 3 root root     4096 Nov  3 19:23 .
+4229.2s 149 drwxr-xr-x 8 root root     4096 Nov  3 18:13 ..
+4229.2s 150 -rw-r--r-- 1 root root 14605501 Nov  3 19:23 bassin_confirmation.json
+4229.2s 151 drwxr-xr-x 5 root root     4096 Nov  3 18:13 MNP-Atlas
+4229.2s 152 -rw-r--r-- 1 root root   117081 Nov  3 19:23 __notebook__.ipynb
+4232.8s 153 /usr/local/lib/python3.13/dist-packages/mistune.py:435: SyntaxWarning: invalid escape sequence '\|'
+4232.8s 154 cells[i][c] = re.sub('\\\\\|', '|', cell)
+4233.1s 155 /usr/local/lib/python3.13/dist-packages/nbconvert/filters/filter_links.py:36: SyntaxWarning: invalid escape sequence '\_'
+4233.1s 156 text = re.sub(r'_', '\_', text) # Escape underscores in display text
+4233.9s 157 [NbConvertApp] Converting notebook __notebook__.ipynb to notebook
+4234.0s 158 [NbConvertApp] Writing 112450 bytes to __notebook__.ipynb
+4236.4s 159 [NbConvertApp] Converting notebook __notebook__.ipynb to html
+4237.0s 160 [NbConvertApp] Writing 400415 bytes to __results__.html
