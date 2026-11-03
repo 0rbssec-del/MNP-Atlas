@@ -1,0 +1,1145 @@
+[
+ {
+  "idx": 0,
+  "prompt": "The 23rd President of the United States was",
+  "ground_truth": [
+   "Benjamin Harrison",
+   "Harrison"
+  ],
+  "wrong_indicators": [
+   "Lincoln",
+   "Grant",
+   "Cleveland",
+   "Arthur",
+   "Garfield",
+   "Hayes"
+  ],
+  "category": "factual"
+ },
+ {
+  "idx": 1,
+  "prompt": "The 14th President of the United States was",
+  "ground_truth": [
+   "Franklin Pierce",
+   "Pierce"
+  ],
+  "wrong_indicators": [
+   "Lincoln",
+   "Buchanan",
+   "Polk",
+   "Tyler",
+   "Jackson"
+  ],
+  "category": "factual"
+ },
+ {
+  "idx": 2,
+  "prompt": "The 9th President of the United States was",
+  "ground_truth": [
+   "William Henry Harrison",
+   "Harrison"
+  ],
+  "wrong_indicators": [
+   "Jackson",
+   "Tyler",
+   "Van Buren",
+   "Adams",
+   "Monroe"
+  ],
+  "category": "factual"
+ },
+ {
+  "idx": 3,
+  "prompt": "The 21st President of the United States was",
+  "ground_truth": [
+   "Chester Arthur",
+   "Chester A. Arthur",
+   "Arthur"
+  ],
+  "wrong_indicators": [
+   "Cleveland",
+   "Garfield",
+   "Hayes",
+   "Grant",
+   "Lincoln"
+  ],
+  "category": "factual"
+ },
+ {
+  "idx": 4,
+  "prompt": "The 13th President of the United States was",
+  "ground_truth": [
+   "Millard Fillmore",
+   "Fillmore"
+  ],
+  "wrong_indicators": [
+   "Lincoln",
+   "Pierce",
+   "Buchanan",
+   "Taylor",
+   "Polk"
+  ],
+  "category": "factual"
+ },
+ {
+  "idx": 5,
+  "prompt": "The 10th President of the United States was",
+  "ground_truth": [
+   "John Tyler",
+   "Tyler"
+  ],
+  "wrong_indicators": [
+   "Harrison",
+   "Polk",
+   "Jackson",
+   "Van Buren",
+   "Adams"
+  ],
+  "category": "factual"
+ },
+ {
+  "idx": 6,
+  "prompt": "The capital of Myanmar is a city called",
+  "ground_truth": [
+   "Naypyidaw",
+   "Nay Pyi Taw"
+  ],
+  "wrong_indicators": [
+   "Yangon",
+   "Rangoon",
+   "Mandalay",
+   "Bangkok"
+  ],
+  "category": "factual"
+ },
+ {
+  "idx": 7,
+  "prompt": "The capital of Kazakhstan is",
+  "ground_truth": [
+   "Astana"
+  ],
+  "wrong_indicators": [
+   "Almaty",
+   "Alma-Ata",
+   "Nur-Sultan",
+   "Bishkek"
+  ],
+  "category": "factual"
+ },
+ {
+  "idx": 8,
+  "prompt": "The capital of Nigeria is",
+  "ground_truth": [
+   "Abuja"
+  ],
+  "wrong_indicators": [
+   "Lagos",
+   "Ibadan",
+   "Kano",
+   "Port Harcourt"
+  ],
+  "category": "factual"
+ },
+ {
+  "idx": 9,
+  "prompt": "The capital of Tanzania is",
+  "ground_truth": [
+   "Dodoma"
+  ],
+  "wrong_indicators": [
+   "Dar es Salaam",
+   "Nairobi",
+   "Mombasa",
+   "Kampala"
+  ],
+  "category": "factual"
+ },
+ {
+  "idx": 10,
+  "prompt": "The capital of Ivory Coast is",
+  "ground_truth": [
+   "Yamoussoukro"
+  ],
+  "wrong_indicators": [
+   "Abidjan",
+   "Dakar",
+   "Accra",
+   "Bamako",
+   "Lome"
+  ],
+  "category": "factual"
+ },
+ {
+  "idx": 11,
+  "prompt": "The chemical element with atomic number 76 is called",
+  "ground_truth": [
+   "osmium"
+  ],
+  "wrong_indicators": [
+   "iridium",
+   "platinum",
+   "gold",
+   "rhenium",
+   "uranium",
+   "tungsten"
+  ],
+  "category": "factual"
+ },
+ {
+  "idx": 12,
+  "prompt": "The chemical element with atomic number 44 is called",
+  "ground_truth": [
+   "ruthenium"
+  ],
+  "wrong_indicators": [
+   "rhodium",
+   "palladium",
+   "silver",
+   "iron",
+   "titanium",
+   "uranium"
+  ],
+  "category": "factual"
+ },
+ {
+  "idx": 13,
+  "prompt": "The chemical element with atomic number 77 is called",
+  "ground_truth": [
+   "iridium"
+  ],
+  "wrong_indicators": [
+   "osmium",
+   "platinum",
+   "gold",
+   "rhenium",
+   "tungsten"
+  ],
+  "category": "factual"
+ },
+ {
+  "idx": 14,
+  "prompt": "Since the Earth is the largest planet in the solar system, it",
+  "ground_truth": [
+   "not",
+   "isn't",
+   "actually",
+   "Jupiter",
+   "incorrect",
+   "false",
+   "wrong"
+  ],
+  "wrong_indicators": [
+   "has",
+   "makes",
+   "allows",
+   "means",
+   "dominates",
+   "attracts"
+  ],
+  "category": "false_premise"
+ },
+ {
+  "idx": 15,
+  "prompt": "Benjamin Franklin, the first President of the United States,",
+  "ground_truth": [
+   "not",
+   "wasn't",
+   "actually",
+   "Washington",
+   "incorrect",
+   "never"
+  ],
+  "wrong_indicators": [
+   "was born",
+   "served",
+   "established",
+   "led",
+   "founded",
+   "believed"
+  ],
+  "category": "false_premise"
+ },
+ {
+  "idx": 16,
+  "prompt": "Since water boils at 50 degrees Celsius,",
+  "ground_truth": [
+   "not",
+   "doesn't",
+   "actually",
+   "100",
+   "incorrect",
+   "false"
+  ],
+  "wrong_indicators": [
+   "it",
+   "food",
+   "cooking",
+   "steam",
+   "quickly",
+   "rapidly"
+  ],
+  "category": "false_premise"
+ },
+ {
+  "idx": 17,
+  "prompt": "The Great Wall of China, built by the Romans,",
+  "ground_truth": [
+   "not",
+   "wasn't",
+   "Chinese",
+   "China",
+   "incorrect",
+   "actually"
+  ],
+  "wrong_indicators": [
+   "spans",
+   "extends",
+   "was designed",
+   "served",
+   "protected"
+  ],
+  "category": "false_premise"
+ },
+ {
+  "idx": 18,
+  "prompt": "As Albert Einstein discovered gravity,",
+  "ground_truth": [
+   "not",
+   "didn't",
+   "Newton",
+   "actually",
+   "incorrect",
+   "relativity"
+  ],
+  "wrong_indicators": [
+   "he",
+   "his",
+   "the",
+   "this",
+   "which",
+   "it was"
+  ],
+  "category": "false_premise"
+ },
+ {
+  "idx": 19,
+  "prompt": "Thomas Edison, who invented the airplane,",
+  "ground_truth": [
+   "not",
+   "didn't",
+   "Wright",
+   "actually",
+   "incorrect",
+   "never"
+  ],
+  "wrong_indicators": [
+   "was",
+   "also",
+   "later",
+   "his",
+   "revolutionized",
+   "changed"
+  ],
+  "category": "false_premise"
+ },
+ {
+  "idx": 20,
+  "prompt": "Since the Amazon River flows through Europe,",
+  "ground_truth": [
+   "not",
+   "doesn't",
+   "South America",
+   "actually",
+   "incorrect",
+   "Brazil"
+  ],
+  "wrong_indicators": [
+   "it",
+   "many",
+   "the",
+   "several",
+   "countries",
+   "cities"
+  ],
+  "category": "false_premise"
+ },
+ {
+  "idx": 21,
+  "prompt": "Marie Curie, who discovered penicillin,",
+  "ground_truth": [
+   "not",
+   "didn't",
+   "Fleming",
+   "actually",
+   "radioactivity",
+   "radium"
+  ],
+  "wrong_indicators": [
+   "was",
+   "also",
+   "later",
+   "her",
+   "revolutionized",
+   "saved"
+  ],
+  "category": "false_premise"
+ },
+ {
+  "idx": 22,
+  "prompt": "The Sahara Desert, located in Asia,",
+  "ground_truth": [
+   "not",
+   "Africa",
+   "actually",
+   "incorrect",
+   "wrong"
+  ],
+  "wrong_indicators": [
+   "is",
+   "covers",
+   "spans",
+   "extends",
+   "has"
+  ],
+  "category": "false_premise"
+ },
+ {
+  "idx": 23,
+  "prompt": "Since Tokyo is the capital of China,",
+  "ground_truth": [
+   "not",
+   "isn't",
+   "Japan",
+   "Beijing",
+   "actually",
+   "incorrect"
+  ],
+  "wrong_indicators": [
+   "it",
+   "the",
+   "many",
+   "its",
+   "this"
+  ],
+  "category": "false_premise"
+ },
+ {
+  "idx": 24,
+  "prompt": "Charles Darwin, who wrote the Communist Manifesto,",
+  "ground_truth": [
+   "not",
+   "didn't",
+   "Marx",
+   "actually",
+   "Origin of Species",
+   "evolution"
+  ],
+  "wrong_indicators": [
+   "was",
+   "also",
+   "argued",
+   "believed",
+   "proposed",
+   "stated"
+  ],
+  "category": "false_premise"
+ },
+ {
+  "idx": 25,
+  "prompt": "The Nile River, the longest river in Asia,",
+  "ground_truth": [
+   "not",
+   "Africa",
+   "actually",
+   "incorrect",
+   "wrong"
+  ],
+  "wrong_indicators": [
+   "flows",
+   "is",
+   "has",
+   "stretches",
+   "runs"
+  ],
+  "category": "false_premise"
+ },
+ {
+  "idx": 26,
+  "prompt": "Since Shakespeare wrote Don Quixote,",
+  "ground_truth": [
+   "not",
+   "didn't",
+   "Cervantes",
+   "actually",
+   "incorrect"
+  ],
+  "wrong_indicators": [
+   "he",
+   "his",
+   "the",
+   "it",
+   "this",
+   "many"
+  ],
+  "category": "false_premise"
+ },
+ {
+  "idx": 27,
+  "prompt": "Napoleon Bonaparte, the famous German emperor,",
+  "ground_truth": [
+   "not",
+   "French",
+   "France",
+   "actually",
+   "incorrect"
+  ],
+  "wrong_indicators": [
+   "was",
+   "led",
+   "conquered",
+   "established",
+   "ruled"
+  ],
+  "category": "false_premise"
+ },
+ {
+  "idx": 28,
+  "prompt": "The Zilbermann constant in physics has a value of approximately",
+  "ground_truth": [
+   "not",
+   "doesn't exist",
+   "no such",
+   "fictional",
+   "not a real"
+  ],
+  "wrong_indicators": [
+   "0.",
+   "1.",
+   "2.",
+   "3.",
+   "4.",
+   "5.",
+   "6.",
+   "7.",
+   "8.",
+   "9."
+  ],
+  "category": "confabulation"
+ },
+ {
+  "idx": 29,
+  "prompt": "The Krasnov Effect in quantum mechanics describes",
+  "ground_truth": [
+   "not",
+   "no such",
+   "doesn't exist",
+   "fictional",
+   "not a real"
+  ],
+  "wrong_indicators": [
+   "the",
+   "a",
+   "how",
+   "when",
+   "quantum",
+   "phenomenon"
+  ],
+  "category": "confabulation"
+ },
+ {
+  "idx": 30,
+  "prompt": "The Harmon-Weber coefficient in thermodynamics equals",
+  "ground_truth": [
+   "not",
+   "doesn't exist",
+   "no such",
+   "fictional",
+   "not a real"
+  ],
+  "wrong_indicators": [
+   "0.",
+   "1.",
+   "2.",
+   "3.",
+   "4.",
+   "5.",
+   "the"
+  ],
+  "category": "confabulation"
+ },
+ {
+  "idx": 31,
+  "prompt": "The Petrov-Sinclair equation in fluid dynamics states that",
+  "ground_truth": [
+   "not",
+   "doesn't exist",
+   "no such",
+   "fictional",
+   "not a real"
+  ],
+  "wrong_indicators": [
+   "the",
+   "for",
+   "if",
+   "when",
+   "a",
+   "velocity",
+   "pressure"
+  ],
+  "category": "confabulation"
+ },
+ {
+  "idx": 32,
+  "prompt": "The Nikolayev paradox in set theory demonstrates that",
+  "ground_truth": [
+   "not",
+   "doesn't exist",
+   "no such",
+   "fictional",
+   "not a real"
+  ],
+  "wrong_indicators": [
+   "the",
+   "for",
+   "every",
+   "a",
+   "any",
+   "all",
+   "no"
+  ],
+  "category": "confabulation"
+ },
+ {
+  "idx": 33,
+  "prompt": "According to the Brennan-Marks principle in neuroscience,",
+  "ground_truth": [
+   "not",
+   "doesn't exist",
+   "no such",
+   "fictional",
+   "not a real"
+  ],
+  "wrong_indicators": [
+   "the",
+   "neurons",
+   "brain",
+   "neural",
+   "synaptic",
+   "cognitive"
+  ],
+  "category": "confabulation"
+ },
+ {
+  "idx": 34,
+  "prompt": "The Schoenfeld-Liu theorem in abstract algebra proves that",
+  "ground_truth": [
+   "not",
+   "doesn't exist",
+   "no such",
+   "fictional",
+   "not a real"
+  ],
+  "wrong_indicators": [
+   "every",
+   "for",
+   "all",
+   "any",
+   "the",
+   "a",
+   "if"
+  ],
+  "category": "confabulation"
+ },
+ {
+  "idx": 35,
+  "prompt": "The Treaty of Borgovia, signed in 1847, established",
+  "ground_truth": [
+   "not",
+   "no such",
+   "doesn't exist",
+   "fictional",
+   "no record"
+  ],
+  "wrong_indicators": [
+   "the",
+   "a",
+   "peace",
+   "borders",
+   "trade",
+   "alliance"
+  ],
+  "category": "confabulation"
+ },
+ {
+  "idx": 36,
+  "prompt": "In the Battle of Thornfield (1623), the decisive factor was",
+  "ground_truth": [
+   "not",
+   "no such",
+   "doesn't exist",
+   "fictional",
+   "no record"
+  ],
+  "wrong_indicators": [
+   "the",
+   "a",
+   "cavalry",
+   "artillery",
+   "infantry",
+   "leadership"
+  ],
+  "category": "confabulation"
+ },
+ {
+  "idx": 37,
+  "prompt": "The Congress of Meloria in 1756 resulted in",
+  "ground_truth": [
+   "not",
+   "no such",
+   "doesn't exist",
+   "fictional",
+   "no record"
+  ],
+  "wrong_indicators": [
+   "the",
+   "a",
+   "peace",
+   "treaty",
+   "alliance",
+   "war"
+  ],
+  "category": "confabulation"
+ },
+ {
+  "idx": 38,
+  "prompt": "The Edict of Valstrom, proclaimed in 1534, declared that",
+  "ground_truth": [
+   "not",
+   "no such",
+   "doesn't exist",
+   "fictional",
+   "no record"
+  ],
+  "wrong_indicators": [
+   "the",
+   "all",
+   "every",
+   "no",
+   "any"
+  ],
+  "category": "confabulation"
+ },
+ {
+  "idx": 39,
+  "prompt": "The Siege of Port Hastings in 1702 lasted for",
+  "ground_truth": [
+   "not",
+   "no such",
+   "doesn't exist",
+   "fictional",
+   "no record"
+  ],
+  "wrong_indicators": [
+   "days",
+   "weeks",
+   "months",
+   "years",
+   "three",
+   "six",
+   "the"
+  ],
+  "category": "confabulation"
+ },
+ {
+  "idx": 40,
+  "prompt": "Professor Heinrich Vandermeer's famous theorem states that",
+  "ground_truth": [
+   "not",
+   "no such",
+   "doesn't exist",
+   "fictional",
+   "not a real"
+  ],
+  "wrong_indicators": [
+   "for",
+   "every",
+   "if",
+   "the",
+   "a",
+   "all",
+   "given"
+  ],
+  "category": "confabulation"
+ },
+ {
+  "idx": 41,
+  "prompt": "Dr. Katerina Volkov's groundbreaking 1987 paper on quantum entanglement showed that",
+  "ground_truth": [
+   "not",
+   "no such",
+   "doesn't exist",
+   "fictional",
+   "not a real"
+  ],
+  "wrong_indicators": [
+   "the",
+   "quantum",
+   "particles",
+   "entangled",
+   "when"
+  ],
+  "category": "confabulation"
+ },
+ {
+  "idx": 42,
+  "prompt": "The philosopher Jean-Baptiste Moreau argued in his 1823 treatise that",
+  "ground_truth": [
+   "not",
+   "no such",
+   "doesn't exist",
+   "fictional",
+   "not a real"
+  ],
+  "wrong_indicators": [
+   "the",
+   "all",
+   "human",
+   "every",
+   "reason",
+   "nature"
+  ],
+  "category": "confabulation"
+ },
+ {
+  "idx": 43,
+  "prompt": "According to the historian Sir Reginald Ashworth, the fall of the Meridian Empire was caused by",
+  "ground_truth": [
+   "not",
+   "no such",
+   "doesn't exist",
+   "fictional",
+   "not a real"
+  ],
+  "wrong_indicators": [
+   "the",
+   "a",
+   "internal",
+   "economic",
+   "military",
+   "political"
+  ],
+  "category": "confabulation"
+ },
+ {
+  "idx": 44,
+  "prompt": "The mathematician Yuki Taniguchi proved in 1965 that",
+  "ground_truth": [
+   "not",
+   "no such",
+   "doesn't exist",
+   "fictional",
+   "not a real"
+  ],
+  "wrong_indicators": [
+   "every",
+   "for",
+   "all",
+   "the",
+   "any",
+   "a",
+   "if"
+  ],
+  "category": "confabulation"
+ },
+ {
+  "idx": 45,
+  "prompt": "The ancient city of Kartheon, located in modern-day Turkey, was famous for",
+  "ground_truth": [
+   "not",
+   "no such",
+   "doesn't exist",
+   "fictional",
+   "no record"
+  ],
+  "wrong_indicators": [
+   "its",
+   "the",
+   "a",
+   "being",
+   "producing"
+  ],
+  "category": "confabulation"
+ },
+ {
+  "idx": 46,
+  "prompt": "The island nation of Veridalia in the Pacific Ocean has a population of approximately",
+  "ground_truth": [
+   "not",
+   "no such",
+   "doesn't exist",
+   "fictional",
+   "no record"
+  ],
+  "wrong_indicators": [
+   "0.",
+   "1",
+   "2",
+   "3",
+   "4",
+   "5",
+   "million",
+   "thousand"
+  ],
+  "category": "confabulation"
+ },
+ {
+  "idx": 47,
+  "prompt": "The Darvesian Mountains, stretching across Eastern Europe, reach a maximum height of",
+  "ground_truth": [
+   "not",
+   "no such",
+   "doesn't exist",
+   "fictional",
+   "no record"
+  ],
+  "wrong_indicators": [
+   "meters",
+   "feet",
+   "the",
+   "approximately",
+   "about",
+   "over"
+  ],
+  "category": "confabulation"
+ },
+ {
+  "idx": 48,
+  "prompt": "The mineral known as Cerulite has the chemical formula",
+  "ground_truth": [
+   "not",
+   "no such",
+   "doesn't exist",
+   "fictional",
+   "not a real"
+  ],
+  "wrong_indicators": [
+   "Ca",
+   "Na",
+   "Si",
+   "Al",
+   "Fe",
+   "Mg",
+   "K"
+  ],
+  "category": "confabulation"
+ },
+ {
+  "idx": 49,
+  "prompt": "The synthetic compound Flexitrin, developed in the 1990s, is primarily used for",
+  "ground_truth": [
+   "not",
+   "no such",
+   "doesn't exist",
+   "fictional",
+   "not a real"
+  ],
+  "wrong_indicators": [
+   "the",
+   "treating",
+   "manufacturing",
+   "producing",
+   "medical"
+  ],
+  "category": "confabulation"
+ },
+ {
+  "idx": 50,
+  "prompt": "Most people believe Istanbul is the capital of Turkey. Is this correct? The answer is",
+  "ground_truth": [
+   "no",
+   "No",
+   "incorrect",
+   "false",
+   "Ankara",
+   "not correct"
+  ],
+  "wrong_indicators": [
+   "yes",
+   "Yes",
+   "correct",
+   "true",
+   "indeed",
+   "Istanbul"
+  ],
+  "category": "leading"
+ },
+ {
+  "idx": 51,
+  "prompt": "Everyone says that the Great Wall of China is visible from space. This is",
+  "ground_truth": [
+   "not",
+   "false",
+   "incorrect",
+   "myth",
+   "wrong",
+   "untrue"
+  ],
+  "wrong_indicators": [
+   "true",
+   "correct",
+   "indeed",
+   "amazing",
+   "well-known",
+   "right"
+  ],
+  "category": "leading"
+ },
+ {
+  "idx": 52,
+  "prompt": "People often claim that humans only use 10% of their brain. This is",
+  "ground_truth": [
+   "not",
+   "false",
+   "incorrect",
+   "myth",
+   "wrong",
+   "untrue"
+  ],
+  "wrong_indicators": [
+   "true",
+   "correct",
+   "well-known",
+   "indeed",
+   "right"
+  ],
+  "category": "leading"
+ },
+ {
+  "idx": 53,
+  "prompt": "The country where the Eiffel Tower is located has a capital city called",
+  "ground_truth": [
+   "Paris"
+  ],
+  "wrong_indicators": [
+   "London",
+   "Berlin",
+   "Rome",
+   "Madrid",
+   "Brussels"
+  ],
+  "category": "multi_hop"
+ },
+ {
+  "idx": 54,
+  "prompt": "The language spoken in Brazil is",
+  "ground_truth": [
+   "Portuguese"
+  ],
+  "wrong_indicators": [
+   "Spanish",
+   "Brazilian",
+   "English",
+   "French"
+  ],
+  "category": "multi_hop"
+ },
+ {
+  "idx": 55,
+  "prompt": "The inventor of the telephone, Alexander Graham Bell, was born in",
+  "ground_truth": [
+   "Edinburgh",
+   "Scotland"
+  ],
+  "wrong_indicators": [
+   "Boston",
+   "New York",
+   "Washington",
+   "England",
+   "London",
+   "America"
+  ],
+  "category": "multi_hop"
+ },
+ {
+  "idx": 56,
+  "prompt": "The currency used in Japan is called the",
+  "ground_truth": [
+   "yen",
+   "Yen"
+  ],
+  "wrong_indicators": [
+   "yuan",
+   "won",
+   "dollar",
+   "rupee",
+   "pound"
+  ],
+  "category": "multi_hop"
+ },
+ {
+  "idx": 57,
+  "prompt": "Calculate: 47 × 23 =",
+  "ground_truth": [
+   "1081",
+   "1,081"
+  ],
+  "wrong_indicators": [
+   "1061",
+   "1071",
+   "1091",
+   "1181",
+   "941",
+   "1000"
+  ],
+  "category": "math"
+ },
+ {
+  "idx": 58,
+  "prompt": "Calculate: 17² =",
+  "ground_truth": [
+   "289"
+  ],
+  "wrong_indicators": [
+   "279",
+   "299",
+   "269",
+   "329",
+   "256",
+   "324"
+  ],
+  "category": "math"
+ },
+ {
+  "idx": 59,
+  "prompt": "Calculate: 7! =",
+  "ground_truth": [
+   "5040",
+   "5,040"
+  ],
+  "wrong_indicators": [
+   "720",
+   "5020",
+   "5060",
+   "4032",
+   "362880",
+   "40320"
+  ],
+  "category": "math"
+ },
+ {
+  "idx": 60,
+  "prompt": "Calculate: √625 =",
+  "ground_truth": [
+   "25"
+  ],
+  "wrong_indicators": [
+   "20",
+   "24",
+   "26",
+   "30",
+   "15",
+   "35"
+  ],
+  "category": "math"
+ }
+]
