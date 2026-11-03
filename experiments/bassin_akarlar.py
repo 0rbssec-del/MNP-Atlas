@@ -264,16 +264,43 @@ def main():
     ap.add_argument("--dtype", default=None, choices=[None, "float16", "bfloat16", "float32"])
     ap.add_argument("--out", default="bassin_akarlar.json")
     ap.add_argument("--seed", type=int, default=None, help="graine de base (nouvelle graine = échantillon frais)")
+    ap.add_argument("--repartir", action="store_true",
+                    help="répartir le modèle sur tous les GPU (device_map='auto'), pour un modèle trop gros pour un seul")
+    ap.add_argument("--lot", type=int, default=None, help="taille des lots de génération (défaut du moteur : 48 ou 32)")
+    ap.add_argument("--couches-relatives", action="store_true",
+                    help="couches aux mêmes profondeurs relatives que 0, 6, 12, 18, 20, 24, 27 sur 28 couches")
+    ap.add_argument("--min-paires", type=int, default=0, help="en dessous de ce nombre de paires : NON TESTABLE")
     args = ap.parse_args()
     if args.seed is not None:
         SEED = args.seed
     dt = getattr(torch, args.dtype) if args.dtype else None    # défaut du moteur : fp16 sur T4, fp32 sur CPU
+    modele = tok = None
+    if args.repartir:
+        from transformers import AutoModelForCausalLM, AutoTokenizer
+        dt_ = dt or (torch.float16 if torch.cuda.is_available() else torch.float32)
+        modele = AutoModelForCausalLM.from_pretrained(args.model, dtype=dt_, device_map="auto").eval()
+        tok = AutoTokenizer.from_pretrained(args.model)
+        print(f"[RÉPARTITION] {sorted(set(str(v) for v in getattr(modele, 'hf_device_map', {'': 'un seul appareil'}).values()))}")
     eng = TrajectoryBifurcationEngine(model_name=args.model, sampler="gumbel", temperature=TEMPERATURE, top_p=1.0,
                                       chat=False, forbid_special=False, torch_dtype=dt, seed=SEED,
-                                      max_new_tokens=MAX_GEN)
+                                      max_new_tokens=MAX_GEN, model=modele, tokenizer=tok, batch_size=args.lot)
     t0 = time.time()
-    b = Bassin(eng, json.loads(Path(args.prompts).read_text()))
+    couches, l_soi = LAYERS, L_SOI
+    if args.couches_relatives:
+        nl = eng.num_layers
+        couches = sorted({round(l * (nl - 1) / 27) for l in LAYERS})
+        l_soi = round(L_SOI * (nl - 1) / 27)
+    print(f"[COUCHES] {eng.num_layers} couches ; patch aux couches {couches} ; auto-patch à L{l_soi}")
+    b = Bassin(eng, json.loads(Path(args.prompts).read_text()), layers=couches, l_soi=l_soi)
     meta = b.run()
+    n_paires = len({(r["idx"], r["pair"]) for r in b.rows})
+    print(f"[PAIRES] {n_paires} paires sur {sum(1 for m in meta if m['paires'])} prompts (minimum fixé : {args.min_paires})")
+    if n_paires < max(1, args.min_paires):
+        print("[VERDICT] NON TESTABLE (trop peu de paires discordantes)")
+        Path(args.out).write_text(json.dumps({"setup": {"model": args.model, "seed": SEED}, "prompts": meta,
+                                              "n_paires": n_paires, "verdict": "NON TESTABLE (trop peu de paires)"},
+                                             ensure_ascii=False, default=float))
+        return
     res = analyser(b.rows, b.layers, b.l_soi)
     res_strict = analyser(b.rows, b.layers, b.l_soi, key="strict")
     print(rapport(res, b.layers))
@@ -287,6 +314,7 @@ def main():
     Path(args.out).write_text(json.dumps({
         "setup": {"model": args.model, "dtype": str(eng.model.dtype), "layers": b.layers, "seed": SEED,
                   "n_pool": N_POOL, "n_pairs": N_PAIRS, "n_seeds": N_SEEDS, "torch": torch.__version__,
+                  "l_soi": b.l_soi, "lot": eng.batch_size, "repartir": args.repartir, "n_paires": n_paires,
                   "minutes": (time.time() - t0) / 60},
         "prompts": meta, "resultats": res, "resultats_strict": res_strict, "lignes": b.rows,
         "n_suites": len(b.rows), "meme_deuxieme_jeton": meme_t1}, ensure_ascii=False, default=float))
