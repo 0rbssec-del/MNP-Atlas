@@ -37,9 +37,9 @@ DIRS = (("C->H", "HALLUCINATION", "CORRECT"), ("H->C", "CORRECT", "HALLUCINATION
 
 
 class Confirmation(ba.Bassin):
-    def __init__(self, eng, prompts, seed):
+    def __init__(self, eng, prompts, seed, textes=False):
         super().__init__(eng, prompts, n_pool=N_POOL, n_pairs=N_PAIRS, n_seeds=N_SEEDS, layers=COUCHES, l_soi=COUCHE)
-        self.seed = seed
+        self.seed, self.textes = seed, textes
 
     def run(self):
         meta = []
@@ -87,9 +87,10 @@ class Confirmation(ba.Bassin):
                 vecs = None if layer is None else st[layer][[x[qui] for x in js]]
                 toks = self.lots(pref, rows, ba.MAX_GEN - 1, self.seed + 7919, 1, layer, vecs)
                 for x, pr, tk in zip(js, pref, toks):
-                    lab, strict, _ = self.etiquettes([pr[-1]] + [int(t) for t in tk], p)
+                    lab, strict, txt = self.etiquettes([pr[-1]] + [int(t) for t in tk], p)
                     self.rows.append(dict(idx=p["idx"], pair=x["pair"], dir=x["dir"], cond=nom, seed=x["seed"],
-                                          label=lab, strict=strict, meme=x["meme"] is not None))
+                                          label=lab, strict=strict, meme=x["meme"] is not None,
+                                          **({"texte": txt} if self.textes else {})))
             print(f"[{p['idx']:2d}] réservoir {m['pool']} ; {len(prs)} paires ; même classe "
                   f"{m['unites_meme_classe']} ; {time.time() - t_start:.0f} s", flush=True)
         return meta
@@ -207,7 +208,15 @@ def main():
     ap.add_argument("--repartir", action="store_true")
     ap.add_argument("--lot", type=int, default=None)
     ap.add_argument("--out", default="bassin_confirmation.json")
+    ap.add_argument("--textes", action="store_true", help="garder le texte de chaque suite (validation du classifieur)")
+    ap.add_argument("--couches", type=int, nargs="+", default=None,
+                    help="sous-ensemble des couches (doit contenir la couche fixée) ; les autres conditions sont inchangées")
     args = ap.parse_args()
+    global COUCHES
+    if args.couches:
+        if COUCHE not in args.couches:
+            raise SystemExit(f"--couches doit contenir L{COUCHE}")
+        COUCHES = sorted(args.couches)
     modele = tok = None
     if args.repartir:
         from transformers import AutoModelForCausalLM, AutoTokenizer
@@ -220,12 +229,14 @@ def main():
     if COUCHE >= eng.num_layers:
         raise SystemExit(f"le modèle n'a que {eng.num_layers} couches ; la couche fixée L{COUCHE} n'existe pas")
     t0 = time.time()
-    b = Confirmation(eng, json.loads(Path(args.prompts).read_text()), args.seed)
+    prompts = json.loads(Path(args.prompts).read_text())
+    b = Confirmation(eng, prompts, args.seed, textes=args.textes)
     meta = b.run()
     out = {"setup": {"model": args.model, "seed": args.seed, "couche": COUCHE, "couches": COUCHES, "n_pool": N_POOL,
                      "n_pairs": N_PAIRS, "n_seeds": N_SEEDS, "lot": eng.batch_size, "dtype": str(eng.model.dtype),
                      "torch": torch.__version__},
-           "prompts": meta, "lignes": b.rows}
+           "prompts": meta, "lignes": b.rows,
+           "textes_prompts": {p["idx"]: p["prompt"] for p in prompts} if args.textes else None}
     if not b.rows:
         out["verdict"] = "NON TESTABLE (aucune paire)"
         print(f"[VERDICT] {out['verdict']}")
