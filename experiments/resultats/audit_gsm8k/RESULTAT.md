@@ -55,7 +55,7 @@ l'assistant avant calcul ; il est déclaré ici, sans changer le verdict pré-en
 ## Limites
 
 - Un seul étiqueteur ; 6 AUCUNE, toutes comptées fausses.
-- Témoin de relance échoué pour Qwen2.5-1.5B (64 %) : cause testée à part (amendement 3, `relance_gsm8k.py`).
+- Témoin de relance de Qwen2.5-1.5B (64 %) : surtout un artefact de comparaison (jetons de remplissage de fin), voir `RELANCE.md`.
 - Estimateur pré-enregistré inadapté (ci-dessus).
 
 ## Travaux voisins

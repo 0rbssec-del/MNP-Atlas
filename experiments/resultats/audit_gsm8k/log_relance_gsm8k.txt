@@ -1,0 +1,40 @@
+6.7s 1 0.00s - Debugger warning: It seems that frozen modules are being used, which may
+6.7s 2 0.00s - make the debugger miss breakpoints. Please pass -Xfrozen_modules=off
+6.7s 3 0.00s - to python to disable frozen modules.
+6.7s 4 0.00s - Note: Debugging will proceed. Set PYDEVD_DISABLE_FILE_VALIDATION=1 to disable this validation.
+7.3s 5 0.00s - Debugger warning: It seems that frozen modules are being used, which may
+7.3s 6 0.00s - make the debugger miss breakpoints. Please pass -Xfrozen_modules=off
+7.3s 7 0.00s - to python to disable frozen modules.
+7.3s 8 0.00s - Note: Debugging will proceed. Set PYDEVD_DISABLE_FILE_VALIDATION=1 to disable this validation.
+14.6s 9 2 GPU
+14.8s 10 Pas de secret HF_TOKEN attaché : BackendError
+34.9s 11 Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+57.1s 12 [TÉMOIN EXTRACTEURS] 20/20 conformes
+114.4s 13 [R1a] 64 problèmes, lots de 32 : 0.9 min
+171.3s 14 [R1b] 64 problèmes, lots de 32 : 0.9 min
+215.9s 15 [R2] 50 problèmes, lots de 32 : 0.7 min
+1272.4s 16 [R3] 200 problèmes, lots de 1 : 17.6 min
+1376.2s 17 [R3b] 20 problèmes, lots de 1 : 1.7 min
+1376.5s 18 [COMPARAISONS] {'R1a=R1b': 64, 'k': 64, 'R2=R1a lot commun': 32, 'lot commun': 32, 'R2=R1a lot modifié': 0, 'lot modifié': 18, 'R3b=R3': 20, 'n1b': 20, 'R1a=passe principale': 64, 'R3=passe principale': 15, 'n1': 200}
+1376.5s 19 [VERDICT CAUSE] COMPOSITION DU LOT
+1376.5s 20 [EFFET SUR LE SCORE] strict : lots de 1 0.575, passe principale 0.575, diff +0.000 [+0.000 ; +0.000] → effet non détecté à n = 200
+1376.5s 21 [EFFET SUR LE SCORE] flexible : lots de 1 0.575, passe principale 0.575, diff +0.000 [+0.000 ; +0.000] → effet non détecté à n = 200
+1514.3s 22 [R4_R1a_fp32] 64 problèmes, lots de 32 : 2.2 min
+1622.7s 23 [R4_R2_fp32] 50 problèmes, lots de 32 : 1.8 min
+1622.8s 24 [SECONDAIRE float32] {'commun': 32, 'modifié': 0, 'lot modifié': 18, 'fp32=fp16 (R1a)': 63}
+1622.8s 25 [SORTIE] /kaggle/working/relance_gsm8k.json (26.8 min)
+1625.8s 26 total 1520
+1625.8s 27 drwxr-xr-x 3 root root   4096 Nov  5 11:48 .
+1625.8s 28 drwxr-xr-x 8 root root   4096 Nov  5 11:21 ..
+1625.8s 29 drwxr-xr-x 3 root root   4096 Nov  5 11:21 MNP-Atlas
+1625.8s 30 -rw-r--r-- 1 root root 866356 Nov  5 11:48 __notebook__.ipynb
+1625.8s 31 -rw-r--r-- 1 root root 616896 Nov  5 11:48 relance_gsm8k.json
+1625.8s 32 -rw-r--r-- 1 root root  54426 Nov  5 11:48 relance_gsm8k.json.gz
+1628.9s 33 /usr/local/lib/python3.13/dist-packages/mistune.py:435: SyntaxWarning: invalid escape sequence '\|'
+1628.9s 34 cells[i][c] = re.sub('\\\\\|', '|', cell)
+1629.0s 35 /usr/local/lib/python3.13/dist-packages/nbconvert/filters/filter_links.py:36: SyntaxWarning: invalid escape sequence '\_'
+1629.0s 36 text = re.sub(r'_', '\_', text) # Escape underscores in display text
+1629.7s 37 [NbConvertApp] Converting notebook __notebook__.ipynb to notebook
+1629.8s 38 [NbConvertApp] Writing 866523 bytes to __notebook__.ipynb
+1632.4s 39 [NbConvertApp] Converting notebook __notebook__.ipynb to html
+1633.3s 40 [NbConvertApp] Writing 1252091 bytes to __results__.html
