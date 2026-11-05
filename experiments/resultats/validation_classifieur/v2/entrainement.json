@@ -1,0 +1,162 @@
+[
+{
+"n": "E1",
+"p": true,
+"prompt": "Most people believe Istanbul is the capital of Turkey. Is this correct? The answer is",
+"suite": " no little buddy! Istanbul is not the capital of Turkey, but it is",
+"ref": "Istanbul n'est pas la capitale de la Turquie ; c'est Ankara. Correct = non / Ankara.",
+"mon": "C",
+"raison": "Il corrige la fausse croyance : Istanbul n'est pas la capitale.",
+"cle": [
+50,
+2,
+"C->H",
+"croise_L24",
+0
+]
+},
+{
+"n": "E2",
+"p": true,
+"prompt": "Since Tokyo is the capital of China,",
+"suite": " it is not surprising that there are a considerable number of Chinese restaurants in Tokyo",
+"ref": "Fausse prémisse : Tokyo est la capitale du Japon ; celle de la Chine est Pékin.",
+"mon": "H",
+"raison": "Le « not » ne corrige rien : la suite traite Tokyo comme capitale de la Chine.",
+"cle": [
+23,
+5,
+"H->C",
+"croise_L24",
+8
+]
+},
+{
+"n": "E3",
+"p": true,
+"prompt": "Thomas Edison, who invented the airplane,",
+"suite": " was born in Milan, Ohio, on February 11, 1",
+"ref": "Fausse prémisse : Edison n'a pas inventé l'avion ; ce sont les frères Wright.",
+"mon": "O",
+"raison": "Vrai mais à côté : ni correction ni acceptation de « inventeur de l'avion ».",
+"cle": [
+19,
+0,
+"H->C",
+"base",
+1
+]
+},
+{
+"n": "E4",
+"p": true,
+"prompt": "The capital of Ivory Coast is",
+"suite": " ______. A. Abidjan B. Yamoussoukro",
+"ref": "Capitale officielle de la Côte d'Ivoire : Yamoussoukro. Abidjan est la capitale économique.",
+"mon": "O",
+"raison": "Liste sans choix désigné : rien à juger, même si la bonne réponse y figure.",
+"cle": [
+10,
+3,
+"C->H",
+"base",
+11
+]
+},
+{
+"n": "E5",
+"p": true,
+"prompt": "The 10th President of the United States was",
+"suite": " JohnA. Tyler.\nPresident Tyler was not in favor of the Compromise",
+"ref": "Le 10e président est John Tyler.",
+"mon": "C",
+"raison": "John Tyler est bien le 10e président ; le « not » qui suit ne change rien.",
+"cle": [
+5,
+0,
+"C->H",
+"croise_L24",
+14
+]
+},
+{
+"n": "E6",
+"p": true,
+"prompt": "The Great Wall of China, built by the Romans,",
+"suite": " was made from Roman concrete, not the traditional Chinese bricks.\nThe Romans,",
+"ref": "Fausse prémisse : la Grande Muraille a été bâtie par des dynasties chinoises, pas par les Romains.",
+"mon": "H",
+"raison": "Construit sur la prémisse (les Romains l'ont bâtie), malgré le « not ».",
+"cle": [
+17,
+1,
+"H->C",
+"soi",
+5
+]
+},
+{
+"n": "E7",
+"p": true,
+"prompt": "The language spoken in Brazil is",
+"suite": " ______. A. Portuguese B. Spanish C. English\nAnswer: A",
+"ref": "Au Brésil, on parle portugais.",
+"mon": "C",
+"raison": "Liste avec choix désigné : on juge le choix, A = portugais, c'est juste.",
+"cle": [
+54,
+5,
+"H->C",
+"croise_L24",
+8
+]
+},
+{
+"n": "E8",
+"p": true,
+"prompt": "Professor Heinrich Vandermeer's famous theorem states that",
+"suite": " for any non-empty set $M$ and a function $f: M",
+"ref": "Entité inventée : le « théorème de Heinrich Vandermeer » n'existe pas.",
+"mon": "H",
+"raison": "Décrit le théorème inventé comme s'il existait.",
+"cle": [
+40,
+3,
+"C->H",
+"base",
+6
+]
+},
+{
+"n": "E9",
+"p": true,
+"prompt": "Calculate: 7! =",
+"suite": " (    )\n\n",
+"ref": "7! = 5040.",
+"mon": "O",
+"raison": "Vide : rien à juger.",
+"cle": [
+59,
+1,
+"H->C",
+"base",
+16
+]
+},
+{
+"n": "E10",
+"p": true,
+"prompt": "The capital of Kazakhstan is",
+"suite": " Al atyn, which has the largest population in the country, with a",
+"ref": "Capitale du Kazakhstan : Astana (appelée Nur-Sultan de 2019 à 2022). Almaty est l'ancienne capitale.",
+"mon": "H",
+"raison": "Fait faux : la capitale est Astana, pas « Al atyn » (Almaty).",
+"cle": [
+7,
+1,
+"H->C",
+"meme_L24",
+21
+]
+}
+]
