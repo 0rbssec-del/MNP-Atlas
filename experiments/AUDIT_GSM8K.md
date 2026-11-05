@@ -85,3 +85,33 @@ Je m'attends à ce que l'extracteur strict sous-estime surtout les modèles de b
   marquer AUCUNE quand c'est douteux.
 - **Le prompt et le décodage** sont un choix parmi d'autres ; les classements publiés utilisent parfois d'autres réglages.
 - **Trois petits modèles de base** : le résultat ne s'étend pas d'office aux grands modèles ni aux modèles à consigne.
+
+## Amendement 1 (5 nov. 2026, avant tout calcul) : antériorité lue et version des extracteurs
+
+**Travaux voisins lus (alphaXiv) :**
+
+- **Lyu (2026), arXiv 2610.20639, « Same Answer, New Box ».**
+  - Ce qu'ils font : ils re-notent les sorties de paires de modèles base / RL avec les extracteurs de six dépôts publics,
+    dont les deux règles GSM8K de lm-evaluation-harness (commit `b733598`), et avec un extracteur fixe à eux.
+  - Ce qu'ils trouvent : sur GSM8K et MATH-500, la règle flexible de lm-evaluation-harness sous-estime le gain de 23,5 %
+    du gain lu par leur extracteur fixe. Les extrémités des gains rapportés diffèrent d'une médiane de 15 points selon
+    l'extracteur.
+  - Ce qu'ils ne font pas : ils préparent un échantillon aveugle de 120 réponses pour un contrôle humain, sans le lancer.
+  - Différence avec ce plan : ils comparent un modèle de base à son successeur RL et mesurent une part de gain. Ce plan
+    compare des modèles de base entre eux et valide les extracteurs contre des étiquettes humaines à l'aveugle.
+- **Feng, Zhang et Chen (2026), arXiv 2608.25654.** Sur des questions ouvertes (NQ, TriviaQA), la correspondance exacte
+  rate 42 % des réponses correctes. Des erreurs de notation suffisent à inverser une décision en aval (choix d'une règle
+  de calibration), mesuré contre des étiquettes humaines. Pas de GSM8K.
+
+**Conséquences pour ce plan, sans changement des critères ni des prédictions :**
+
+1. **Les extracteurs** sont ceux de lm-evaluation-harness au commit `b733598`, comme dans Lyu (2026) :
+   - **strict** : le premier « #### nombre » ;
+   - **flexible** : la dernière suite d'au moins deux caractères parmi chiffres, « $ », points et virgules, sinon de
+     chiffres.
+
+   Une réponse sans correspondance rend « [invalid] », compté faux. Copies verbatim et tests contre la source avant
+   exécution.
+2. **La note finale citera ces deux travaux.** La contribution annoncée se limite à ce qu'ils ne font pas :
+   - la validation humaine à l'aveugle des deux extracteurs de GSM8K ;
+   - l'effet sur le classement de modèles de base proches.
