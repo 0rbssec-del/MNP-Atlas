@@ -1,0 +1,33 @@
+6.4s 1 0.00s - Debugger warning: It seems that frozen modules are being used, which may
+6.4s 2 0.00s - make the debugger miss breakpoints. Please pass -Xfrozen_modules=off
+6.4s 3 0.00s - to python to disable frozen modules.
+6.4s 4 0.00s - Note: Debugging will proceed. Set PYDEVD_DISABLE_FILE_VALIDATION=1 to disable this validation.
+7.0s 5 0.00s - Debugger warning: It seems that frozen modules are being used, which may
+7.0s 6 0.00s - make the debugger miss breakpoints. Please pass -Xfrozen_modules=off
+7.0s 7 0.00s - to python to disable frozen modules.
+7.0s 8 0.00s - Note: Debugging will proceed. Set PYDEVD_DISABLE_FILE_VALIDATION=1 to disable this validation.
+13.0s 9 2 GPU
+13.2s 10 Pas de secret HF_TOKEN attaché : BackendError
+32.3s 11 Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+55.5s 12 [TÉMOIN EXTRACTEURS] 20/20 conformes
+55.5s 13 [DONNÉES] 500 problèmes ; empreinte des indices e23f7e16d8dbe5bf66561c63cc3aeeaa
+589.4s 14 [Qwen/Qwen2.5-1.5B] exactitude strict 0.628, flexible 0.628 ; désaccord 0.004 ; relance identique 64% sur 50 ; 9.3 min
+1423.7s 15 [Qwen/Qwen3-1.7B-Base] exactitude strict 0.662, flexible 0.698 ; désaccord 0.036 ; relance identique 98% sur 50 ; 13.9 min
+1521.4s 16 [transformers] Ignoring clean_up_tokenization_spaces=True for BPE tokenizer TokenizersBackend. The clean_up_tokenization post-processing step is designed for WordPiece tokenizers and is destructive for BPE (it strips spaces before punctuation). Set clean_up_tokenization_spaces=False to suppress this warning, or set clean_up_tokenization_spaces_for_bpe_even_though_it_will_corrupt_output=True to force cleanup anyway.
+2406.0s 17 [HuggingFaceTB/SmolLM3-3B-Base] exactitude strict 0.680, flexible 0.680 ; désaccord 0.000 ; relance identique 100% sur 50 ; 16.4 min
+2406.2s 18 [SORTIE] /kaggle/working/audit_gsm8k.json (39.9 min)
+2409.2s 19 total 2772
+2409.2s 20 drwxr-xr-x 3 root root    4096 Nov  5 10:10 .
+2409.2s 21 drwxr-xr-x 8 root root    4096 Nov  5 09:30 ..
+2409.2s 22 -rw-r--r-- 1 root root 2119171 Nov  5 10:10 audit_gsm8k.json
+2409.2s 23 -rw-r--r-- 1 root root  303998 Nov  5 10:10 audit_gsm8k.json.gz
+2409.2s 24 drwxr-xr-x 3 root root    4096 Nov  5 09:30 MNP-Atlas
+2409.2s 25 -rw-r--r-- 1 root root  393257 Nov  5 10:10 __notebook__.ipynb
+2412.4s 26 /usr/local/lib/python3.13/dist-packages/mistune.py:435: SyntaxWarning: invalid escape sequence '\|'
+2412.4s 27 cells[i][c] = re.sub('\\\\\|', '|', cell)
+2412.5s 28 /usr/local/lib/python3.13/dist-packages/nbconvert/filters/filter_links.py:36: SyntaxWarning: invalid escape sequence '\_'
+2412.5s 29 text = re.sub(r'_', '\_', text) # Escape underscores in display text
+2413.3s 30 [NbConvertApp] Converting notebook __notebook__.ipynb to notebook
+2413.4s 31 [NbConvertApp] Writing 393792 bytes to __notebook__.ipynb
+2415.8s 32 [NbConvertApp] Converting notebook __notebook__.ipynb to html
+2416.5s 33 [NbConvertApp] Writing 718252 bytes to __results__.html

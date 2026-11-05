@@ -1,0 +1,1519 @@
+{
+ "seed": 20261106,
+ "taille_strates": {
+  "Qwen/Qwen2.5-1.5B": {
+   "D": 2,
+   "A": 498
+  },
+  "Qwen/Qwen3-1.7B-Base": {
+   "D": 18,
+   "A": 482
+  },
+  "HuggingFaceTB/SmolLM3-3B-Base": {
+   "D": 0,
+   "A": 500
+  }
+ },
+ "items": [
+  {
+   "n": 1,
+   "strate": "D",
+   "modele": "Qwen/Qwen3-1.7B-Base",
+   "i": 1010,
+   "strict": "[invalid]",
+   "flexible": "5.",
+   "ok_strict": false,
+   "ok_flexible": true
+  },
+  {
+   "n": 2,
+   "strate": "A",
+   "modele": "Qwen/Qwen2.5-1.5B",
+   "i": 219,
+   "strict": "27",
+   "flexible": "27",
+   "ok_strict": false,
+   "ok_flexible": false
+  },
+  {
+   "n": 3,
+   "strate": "A",
+   "modele": "HuggingFaceTB/SmolLM3-3B-Base",
+   "i": 1314,
+   "strict": "6",
+   "flexible": "6",
+   "ok_strict": false,
+   "ok_flexible": false
+  },
+  {
+   "n": 4,
+   "strate": "A",
+   "modele": "Qwen/Qwen2.5-1.5B",
+   "i": 447,
+   "strict": "5",
+   "flexible": "5",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 5,
+   "strate": "D",
+   "modele": "Qwen/Qwen3-1.7B-Base",
+   "i": 966,
+   "strict": "[invalid]",
+   "flexible": "48",
+   "ok_strict": false,
+   "ok_flexible": true
+  },
+  {
+   "n": 6,
+   "strate": "A",
+   "modele": "HuggingFaceTB/SmolLM3-3B-Base",
+   "i": 601,
+   "strict": "172",
+   "flexible": "172",
+   "ok_strict": false,
+   "ok_flexible": false
+  },
+  {
+   "n": 7,
+   "strate": "A",
+   "modele": "Qwen/Qwen2.5-1.5B",
+   "i": 1128,
+   "strict": "9",
+   "flexible": "9",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 8,
+   "strate": "A",
+   "modele": "Qwen/Qwen2.5-1.5B",
+   "i": 169,
+   "strict": "120",
+   "flexible": "120",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 9,
+   "strate": "A",
+   "modele": "Qwen/Qwen2.5-1.5B",
+   "i": 1297,
+   "strict": "60",
+   "flexible": "60",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 10,
+   "strate": "A",
+   "modele": "Qwen/Qwen2.5-1.5B",
+   "i": 1126,
+   "strict": "50",
+   "flexible": "50",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 11,
+   "strate": "A",
+   "modele": "Qwen/Qwen2.5-1.5B",
+   "i": 493,
+   "strict": "[invalid]",
+   "flexible": "75",
+   "ok_strict": false,
+   "ok_flexible": false
+  },
+  {
+   "n": 12,
+   "strate": "A",
+   "modele": "Qwen/Qwen2.5-1.5B",
+   "i": 1151,
+   "strict": "50",
+   "flexible": "50",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 13,
+   "strate": "A",
+   "modele": "Qwen/Qwen2.5-1.5B",
+   "i": 275,
+   "strict": "102",
+   "flexible": "102",
+   "ok_strict": false,
+   "ok_flexible": false
+  },
+  {
+   "n": 14,
+   "strate": "A",
+   "modele": "HuggingFaceTB/SmolLM3-3B-Base",
+   "i": 1260,
+   "strict": "5",
+   "flexible": "5",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 15,
+   "strate": "D",
+   "modele": "Qwen/Qwen3-1.7B-Base",
+   "i": 909,
+   "strict": "[invalid]",
+   "flexible": "38.",
+   "ok_strict": false,
+   "ok_flexible": true
+  },
+  {
+   "n": 16,
+   "strate": "A",
+   "modele": "Qwen/Qwen3-1.7B-Base",
+   "i": 1278,
+   "strict": "665",
+   "flexible": "665",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 17,
+   "strate": "A",
+   "modele": "HuggingFaceTB/SmolLM3-3B-Base",
+   "i": 1177,
+   "strict": "17",
+   "flexible": "17",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 18,
+   "strate": "A",
+   "modele": "HuggingFaceTB/SmolLM3-3B-Base",
+   "i": 469,
+   "strict": "4",
+   "flexible": "4",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 19,
+   "strate": "A",
+   "modele": "Qwen/Qwen3-1.7B-Base",
+   "i": 592,
+   "strict": "1",
+   "flexible": "1",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 20,
+   "strate": "A",
+   "modele": "HuggingFaceTB/SmolLM3-3B-Base",
+   "i": 773,
+   "strict": "10",
+   "flexible": "10",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 21,
+   "strate": "A",
+   "modele": "HuggingFaceTB/SmolLM3-3B-Base",
+   "i": 217,
+   "strict": "15",
+   "flexible": "15",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 22,
+   "strate": "A",
+   "modele": "Qwen/Qwen3-1.7B-Base",
+   "i": 1087,
+   "strict": "12",
+   "flexible": "12",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 23,
+   "strate": "A",
+   "modele": "Qwen/Qwen2.5-1.5B",
+   "i": 987,
+   "strict": "16",
+   "flexible": "16",
+   "ok_strict": false,
+   "ok_flexible": false
+  },
+  {
+   "n": 24,
+   "strate": "A",
+   "modele": "HuggingFaceTB/SmolLM3-3B-Base",
+   "i": 157,
+   "strict": "1220",
+   "flexible": "1220",
+   "ok_strict": false,
+   "ok_flexible": false
+  },
+  {
+   "n": 25,
+   "strate": "A",
+   "modele": "Qwen/Qwen3-1.7B-Base",
+   "i": 108,
+   "strict": "50",
+   "flexible": "50",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 26,
+   "strate": "A",
+   "modele": "Qwen/Qwen2.5-1.5B",
+   "i": 911,
+   "strict": "64",
+   "flexible": "64",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 27,
+   "strate": "A",
+   "modele": "HuggingFaceTB/SmolLM3-3B-Base",
+   "i": 116,
+   "strict": "42",
+   "flexible": "42",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 28,
+   "strate": "A",
+   "modele": "Qwen/Qwen2.5-1.5B",
+   "i": 765,
+   "strict": "290",
+   "flexible": "290",
+   "ok_strict": false,
+   "ok_flexible": false
+  },
+  {
+   "n": 29,
+   "strate": "A",
+   "modele": "HuggingFaceTB/SmolLM3-3B-Base",
+   "i": 474,
+   "strict": "80",
+   "flexible": "80",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 30,
+   "strate": "A",
+   "modele": "Qwen/Qwen2.5-1.5B",
+   "i": 634,
+   "strict": "14",
+   "flexible": "14",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 31,
+   "strate": "A",
+   "modele": "HuggingFaceTB/SmolLM3-3B-Base",
+   "i": 355,
+   "strict": "34",
+   "flexible": "34",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 32,
+   "strate": "A",
+   "modele": "HuggingFaceTB/SmolLM3-3B-Base",
+   "i": 907,
+   "strict": "16",
+   "flexible": "16",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 33,
+   "strate": "A",
+   "modele": "Qwen/Qwen3-1.7B-Base",
+   "i": 61,
+   "strict": "1430",
+   "flexible": "1430",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 34,
+   "strate": "A",
+   "modele": "Qwen/Qwen2.5-1.5B",
+   "i": 322,
+   "strict": "24",
+   "flexible": "24",
+   "ok_strict": false,
+   "ok_flexible": false
+  },
+  {
+   "n": 35,
+   "strate": "A",
+   "modele": "Qwen/Qwen3-1.7B-Base",
+   "i": 460,
+   "strict": "84",
+   "flexible": "84",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 36,
+   "strate": "A",
+   "modele": "Qwen/Qwen3-1.7B-Base",
+   "i": 732,
+   "strict": "87",
+   "flexible": "87",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 37,
+   "strate": "A",
+   "modele": "Qwen/Qwen3-1.7B-Base",
+   "i": 465,
+   "strict": "30",
+   "flexible": "30",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 38,
+   "strate": "A",
+   "modele": "Qwen/Qwen2.5-1.5B",
+   "i": 500,
+   "strict": "25",
+   "flexible": "25",
+   "ok_strict": false,
+   "ok_flexible": false
+  },
+  {
+   "n": 39,
+   "strate": "A",
+   "modele": "Qwen/Qwen2.5-1.5B",
+   "i": 1009,
+   "strict": "[invalid]",
+   "flexible": "16",
+   "ok_strict": false,
+   "ok_flexible": false
+  },
+  {
+   "n": 40,
+   "strate": "A",
+   "modele": "Qwen/Qwen3-1.7B-Base",
+   "i": 781,
+   "strict": "2",
+   "flexible": "2",
+   "ok_strict": false,
+   "ok_flexible": false
+  },
+  {
+   "n": 41,
+   "strate": "A",
+   "modele": "Qwen/Qwen2.5-1.5B",
+   "i": 224,
+   "strict": "180",
+   "flexible": "180",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 42,
+   "strate": "A",
+   "modele": "HuggingFaceTB/SmolLM3-3B-Base",
+   "i": 1015,
+   "strict": "-90",
+   "flexible": "-90",
+   "ok_strict": false,
+   "ok_flexible": false
+  },
+  {
+   "n": 43,
+   "strate": "A",
+   "modele": "HuggingFaceTB/SmolLM3-3B-Base",
+   "i": 1164,
+   "strict": "9",
+   "flexible": "9",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 44,
+   "strate": "D",
+   "modele": "Qwen/Qwen3-1.7B-Base",
+   "i": 963,
+   "strict": "[invalid]",
+   "flexible": "147",
+   "ok_strict": false,
+   "ok_flexible": true
+  },
+  {
+   "n": 45,
+   "strate": "A",
+   "modele": "Qwen/Qwen2.5-1.5B",
+   "i": 1227,
+   "strict": "60",
+   "flexible": "60",
+   "ok_strict": false,
+   "ok_flexible": false
+  },
+  {
+   "n": 46,
+   "strate": "A",
+   "modele": "HuggingFaceTB/SmolLM3-3B-Base",
+   "i": 80,
+   "strict": "10",
+   "flexible": "10",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 47,
+   "strate": "A",
+   "modele": "Qwen/Qwen2.5-1.5B",
+   "i": 509,
+   "strict": "12",
+   "flexible": "12",
+   "ok_strict": false,
+   "ok_flexible": false
+  },
+  {
+   "n": 48,
+   "strate": "A",
+   "modele": "Qwen/Qwen2.5-1.5B",
+   "i": 673,
+   "strict": "9",
+   "flexible": "9",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 49,
+   "strate": "A",
+   "modele": "Qwen/Qwen3-1.7B-Base",
+   "i": 1068,
+   "strict": "12",
+   "flexible": "12",
+   "ok_strict": false,
+   "ok_flexible": false
+  },
+  {
+   "n": 50,
+   "strate": "A",
+   "modele": "HuggingFaceTB/SmolLM3-3B-Base",
+   "i": 604,
+   "strict": "12",
+   "flexible": "12",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 51,
+   "strate": "A",
+   "modele": "HuggingFaceTB/SmolLM3-3B-Base",
+   "i": 1057,
+   "strict": "24",
+   "flexible": "24",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 52,
+   "strate": "D",
+   "modele": "Qwen/Qwen3-1.7B-Base",
+   "i": 828,
+   "strict": "[invalid]",
+   "flexible": "60.",
+   "ok_strict": false,
+   "ok_flexible": true
+  },
+  {
+   "n": 53,
+   "strate": "D",
+   "modele": "Qwen/Qwen3-1.7B-Base",
+   "i": 883,
+   "strict": "[invalid]",
+   "flexible": "25.",
+   "ok_strict": false,
+   "ok_flexible": true
+  },
+  {
+   "n": 54,
+   "strate": "A",
+   "modele": "HuggingFaceTB/SmolLM3-3B-Base",
+   "i": 1037,
+   "strict": "10",
+   "flexible": "10",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 55,
+   "strate": "A",
+   "modele": "Qwen/Qwen3-1.7B-Base",
+   "i": 1015,
+   "strict": "87",
+   "flexible": "87",
+   "ok_strict": false,
+   "ok_flexible": false
+  },
+  {
+   "n": 56,
+   "strate": "A",
+   "modele": "Qwen/Qwen2.5-1.5B",
+   "i": 942,
+   "strict": "178.75",
+   "flexible": "178.75",
+   "ok_strict": false,
+   "ok_flexible": false
+  },
+  {
+   "n": 57,
+   "strate": "A",
+   "modele": "Qwen/Qwen3-1.7B-Base",
+   "i": 610,
+   "strict": "65960",
+   "flexible": "65960",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 58,
+   "strate": "A",
+   "modele": "Qwen/Qwen3-1.7B-Base",
+   "i": 161,
+   "strict": "32",
+   "flexible": "32",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 59,
+   "strate": "A",
+   "modele": "HuggingFaceTB/SmolLM3-3B-Base",
+   "i": 1269,
+   "strict": "54",
+   "flexible": "54",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 60,
+   "strate": "A",
+   "modele": "Qwen/Qwen2.5-1.5B",
+   "i": 1284,
+   "strict": "12",
+   "flexible": "12",
+   "ok_strict": false,
+   "ok_flexible": false
+  },
+  {
+   "n": 61,
+   "strate": "D",
+   "modele": "Qwen/Qwen3-1.7B-Base",
+   "i": 1291,
+   "strict": "[invalid]",
+   "flexible": "27.",
+   "ok_strict": false,
+   "ok_flexible": true
+  },
+  {
+   "n": 62,
+   "strate": "A",
+   "modele": "Qwen/Qwen3-1.7B-Base",
+   "i": 775,
+   "strict": "276",
+   "flexible": "276",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 63,
+   "strate": "A",
+   "modele": "Qwen/Qwen3-1.7B-Base",
+   "i": 1260,
+   "strict": "2",
+   "flexible": "2",
+   "ok_strict": false,
+   "ok_flexible": false
+  },
+  {
+   "n": 64,
+   "strate": "A",
+   "modele": "HuggingFaceTB/SmolLM3-3B-Base",
+   "i": 706,
+   "strict": "4",
+   "flexible": "4",
+   "ok_strict": false,
+   "ok_flexible": false
+  },
+  {
+   "n": 65,
+   "strate": "A",
+   "modele": "HuggingFaceTB/SmolLM3-3B-Base",
+   "i": 362,
+   "strict": "23",
+   "flexible": "23",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 66,
+   "strate": "A",
+   "modele": "Qwen/Qwen3-1.7B-Base",
+   "i": 63,
+   "strict": "1596",
+   "flexible": "1596",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 67,
+   "strate": "A",
+   "modele": "HuggingFaceTB/SmolLM3-3B-Base",
+   "i": 366,
+   "strict": "9",
+   "flexible": "9",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 68,
+   "strate": "A",
+   "modele": "Qwen/Qwen2.5-1.5B",
+   "i": 307,
+   "strict": "4",
+   "flexible": "4",
+   "ok_strict": false,
+   "ok_flexible": false
+  },
+  {
+   "n": 69,
+   "strate": "D",
+   "modele": "Qwen/Qwen3-1.7B-Base",
+   "i": 192,
+   "strict": "[invalid]",
+   "flexible": "91",
+   "ok_strict": false,
+   "ok_flexible": true
+  },
+  {
+   "n": 70,
+   "strate": "A",
+   "modele": "Qwen/Qwen3-1.7B-Base",
+   "i": 1005,
+   "strict": "1490",
+   "flexible": "1490",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 71,
+   "strate": "A",
+   "modele": "Qwen/Qwen2.5-1.5B",
+   "i": 982,
+   "strict": "6",
+   "flexible": "6",
+   "ok_strict": false,
+   "ok_flexible": false
+  },
+  {
+   "n": 72,
+   "strate": "A",
+   "modele": "Qwen/Qwen3-1.7B-Base",
+   "i": 633,
+   "strict": "3.75",
+   "flexible": "3.75",
+   "ok_strict": false,
+   "ok_flexible": false
+  },
+  {
+   "n": 73,
+   "strate": "A",
+   "modele": "HuggingFaceTB/SmolLM3-3B-Base",
+   "i": 744,
+   "strict": "4",
+   "flexible": "4",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 74,
+   "strate": "A",
+   "modele": "Qwen/Qwen3-1.7B-Base",
+   "i": 1128,
+   "strict": "9",
+   "flexible": "9",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 75,
+   "strate": "A",
+   "modele": "HuggingFaceTB/SmolLM3-3B-Base",
+   "i": 1125,
+   "strict": "90",
+   "flexible": "90",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 76,
+   "strate": "A",
+   "modele": "Qwen/Qwen3-1.7B-Base",
+   "i": 60,
+   "strict": "17",
+   "flexible": "17",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 77,
+   "strate": "A",
+   "modele": "Qwen/Qwen2.5-1.5B",
+   "i": 1003,
+   "strict": "720",
+   "flexible": "720",
+   "ok_strict": false,
+   "ok_flexible": false
+  },
+  {
+   "n": 78,
+   "strate": "A",
+   "modele": "Qwen/Qwen2.5-1.5B",
+   "i": 778,
+   "strict": "38",
+   "flexible": "38",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 79,
+   "strate": "A",
+   "modele": "HuggingFaceTB/SmolLM3-3B-Base",
+   "i": 625,
+   "strict": "160",
+   "flexible": "160",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 80,
+   "strate": "D",
+   "modele": "Qwen/Qwen3-1.7B-Base",
+   "i": 1212,
+   "strict": "[invalid]",
+   "flexible": "150.",
+   "ok_strict": false,
+   "ok_flexible": true
+  },
+  {
+   "n": 81,
+   "strate": "D",
+   "modele": "Qwen/Qwen3-1.7B-Base",
+   "i": 1199,
+   "strict": "[invalid]",
+   "flexible": "2.",
+   "ok_strict": false,
+   "ok_flexible": true
+  },
+  {
+   "n": 82,
+   "strate": "A",
+   "modele": "HuggingFaceTB/SmolLM3-3B-Base",
+   "i": 777,
+   "strict": "4400",
+   "flexible": "4400",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 83,
+   "strate": "A",
+   "modele": "Qwen/Qwen3-1.7B-Base",
+   "i": 1206,
+   "strict": "40000",
+   "flexible": "40000",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 84,
+   "strate": "A",
+   "modele": "Qwen/Qwen2.5-1.5B",
+   "i": 484,
+   "strict": "240",
+   "flexible": "240",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 85,
+   "strate": "A",
+   "modele": "Qwen/Qwen2.5-1.5B",
+   "i": 181,
+   "strict": "160",
+   "flexible": "160",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 86,
+   "strate": "A",
+   "modele": "Qwen/Qwen2.5-1.5B",
+   "i": 451,
+   "strict": "11050",
+   "flexible": "11050",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 87,
+   "strate": "A",
+   "modele": "HuggingFaceTB/SmolLM3-3B-Base",
+   "i": 396,
+   "strict": "3",
+   "flexible": "3",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 88,
+   "strate": "A",
+   "modele": "Qwen/Qwen3-1.7B-Base",
+   "i": 1204,
+   "strict": "168",
+   "flexible": "168",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 89,
+   "strate": "A",
+   "modele": "HuggingFaceTB/SmolLM3-3B-Base",
+   "i": 391,
+   "strict": "15",
+   "flexible": "15",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 90,
+   "strate": "A",
+   "modele": "Qwen/Qwen3-1.7B-Base",
+   "i": 556,
+   "strict": "160",
+   "flexible": "160",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 91,
+   "strate": "D",
+   "modele": "Qwen/Qwen3-1.7B-Base",
+   "i": 665,
+   "strict": "[invalid]",
+   "flexible": "360.",
+   "ok_strict": false,
+   "ok_flexible": true
+  },
+  {
+   "n": 92,
+   "strate": "A",
+   "modele": "Qwen/Qwen2.5-1.5B",
+   "i": 373,
+   "strict": "0",
+   "flexible": "0",
+   "ok_strict": false,
+   "ok_flexible": false
+  },
+  {
+   "n": 93,
+   "strate": "A",
+   "modele": "HuggingFaceTB/SmolLM3-3B-Base",
+   "i": 1189,
+   "strict": "6",
+   "flexible": "6",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 94,
+   "strate": "A",
+   "modele": "Qwen/Qwen2.5-1.5B",
+   "i": 188,
+   "strict": "14",
+   "flexible": "14",
+   "ok_strict": false,
+   "ok_flexible": false
+  },
+  {
+   "n": 95,
+   "strate": "D",
+   "modele": "Qwen/Qwen2.5-1.5B",
+   "i": 659,
+   "strict": "[invalid]",
+   "flexible": "3",
+   "ok_strict": false,
+   "ok_flexible": true
+  },
+  {
+   "n": 96,
+   "strate": "A",
+   "modele": "HuggingFaceTB/SmolLM3-3B-Base",
+   "i": 1208,
+   "strict": "27",
+   "flexible": "27",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 97,
+   "strate": "A",
+   "modele": "HuggingFaceTB/SmolLM3-3B-Base",
+   "i": 776,
+   "strict": "800",
+   "flexible": "800",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 98,
+   "strate": "A",
+   "modele": "Qwen/Qwen2.5-1.5B",
+   "i": 918,
+   "strict": "56",
+   "flexible": "56",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 99,
+   "strate": "A",
+   "modele": "Qwen/Qwen2.5-1.5B",
+   "i": 1057,
+   "strict": "24",
+   "flexible": "24",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 100,
+   "strate": "A",
+   "modele": "Qwen/Qwen3-1.7B-Base",
+   "i": 26,
+   "strict": "243",
+   "flexible": "243",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 101,
+   "strate": "A",
+   "modele": "HuggingFaceTB/SmolLM3-3B-Base",
+   "i": 793,
+   "strict": "250",
+   "flexible": "250",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 102,
+   "strate": "A",
+   "modele": "Qwen/Qwen3-1.7B-Base",
+   "i": 172,
+   "strict": "51",
+   "flexible": "51",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 103,
+   "strate": "A",
+   "modele": "Qwen/Qwen3-1.7B-Base",
+   "i": 890,
+   "strict": "25",
+   "flexible": "25",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 104,
+   "strate": "D",
+   "modele": "Qwen/Qwen3-1.7B-Base",
+   "i": 1203,
+   "strict": "[invalid]",
+   "flexible": "240.",
+   "ok_strict": false,
+   "ok_flexible": true
+  },
+  {
+   "n": 105,
+   "strate": "D",
+   "modele": "Qwen/Qwen3-1.7B-Base",
+   "i": 132,
+   "strict": "[invalid]",
+   "flexible": "60",
+   "ok_strict": false,
+   "ok_flexible": true
+  },
+  {
+   "n": 106,
+   "strate": "D",
+   "modele": "Qwen/Qwen3-1.7B-Base",
+   "i": 764,
+   "strict": "[invalid]",
+   "flexible": "14.",
+   "ok_strict": false,
+   "ok_flexible": true
+  },
+  {
+   "n": 107,
+   "strate": "A",
+   "modele": "Qwen/Qwen2.5-1.5B",
+   "i": 1247,
+   "strict": "7",
+   "flexible": "7",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 108,
+   "strate": "A",
+   "modele": "Qwen/Qwen3-1.7B-Base",
+   "i": 609,
+   "strict": "7",
+   "flexible": "7",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 109,
+   "strate": "A",
+   "modele": "HuggingFaceTB/SmolLM3-3B-Base",
+   "i": 1180,
+   "strict": "5600",
+   "flexible": "5600",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 110,
+   "strate": "A",
+   "modele": "HuggingFaceTB/SmolLM3-3B-Base",
+   "i": 1199,
+   "strict": "2.67",
+   "flexible": "2.67",
+   "ok_strict": false,
+   "ok_flexible": false
+  },
+  {
+   "n": 111,
+   "strate": "A",
+   "modele": "HuggingFaceTB/SmolLM3-3B-Base",
+   "i": 1298,
+   "strict": "441.07",
+   "flexible": "441.07",
+   "ok_strict": false,
+   "ok_flexible": false
+  },
+  {
+   "n": 112,
+   "strate": "A",
+   "modele": "HuggingFaceTB/SmolLM3-3B-Base",
+   "i": 250,
+   "strict": "-7",
+   "flexible": "-7",
+   "ok_strict": false,
+   "ok_flexible": false
+  },
+  {
+   "n": 113,
+   "strate": "A",
+   "modele": "Qwen/Qwen2.5-1.5B",
+   "i": 977,
+   "strict": "4",
+   "flexible": "4",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 114,
+   "strate": "A",
+   "modele": "HuggingFaceTB/SmolLM3-3B-Base",
+   "i": 1247,
+   "strict": "7",
+   "flexible": "7",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 115,
+   "strate": "A",
+   "modele": "HuggingFaceTB/SmolLM3-3B-Base",
+   "i": 181,
+   "strict": "160",
+   "flexible": "160",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 116,
+   "strate": "A",
+   "modele": "Qwen/Qwen2.5-1.5B",
+   "i": 1049,
+   "strict": "20",
+   "flexible": "20",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 117,
+   "strate": "A",
+   "modele": "Qwen/Qwen2.5-1.5B",
+   "i": 273,
+   "strict": "765",
+   "flexible": "765",
+   "ok_strict": false,
+   "ok_flexible": false
+  },
+  {
+   "n": 118,
+   "strate": "A",
+   "modele": "Qwen/Qwen2.5-1.5B",
+   "i": 928,
+   "strict": "60",
+   "flexible": "60",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 119,
+   "strate": "A",
+   "modele": "Qwen/Qwen3-1.7B-Base",
+   "i": 547,
+   "strict": "120",
+   "flexible": "120",
+   "ok_strict": false,
+   "ok_flexible": false
+  },
+  {
+   "n": 120,
+   "strate": "A",
+   "modele": "HuggingFaceTB/SmolLM3-3B-Base",
+   "i": 151,
+   "strict": "4.5",
+   "flexible": "4.5",
+   "ok_strict": false,
+   "ok_flexible": false
+  },
+  {
+   "n": 121,
+   "strate": "A",
+   "modele": "HuggingFaceTB/SmolLM3-3B-Base",
+   "i": 323,
+   "strict": "75",
+   "flexible": "75",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 122,
+   "strate": "A",
+   "modele": "HuggingFaceTB/SmolLM3-3B-Base",
+   "i": 504,
+   "strict": "2",
+   "flexible": "2",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 123,
+   "strate": "D",
+   "modele": "Qwen/Qwen2.5-1.5B",
+   "i": 1001,
+   "strict": "2",
+   "flexible": "30",
+   "ok_strict": true,
+   "ok_flexible": false
+  },
+  {
+   "n": 124,
+   "strate": "A",
+   "modele": "Qwen/Qwen3-1.7B-Base",
+   "i": 347,
+   "strict": "36",
+   "flexible": "36",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 125,
+   "strate": "A",
+   "modele": "Qwen/Qwen3-1.7B-Base",
+   "i": 700,
+   "strict": "135",
+   "flexible": "135",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 126,
+   "strate": "A",
+   "modele": "Qwen/Qwen3-1.7B-Base",
+   "i": 271,
+   "strict": "20",
+   "flexible": "20",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 127,
+   "strate": "A",
+   "modele": "Qwen/Qwen2.5-1.5B",
+   "i": 1056,
+   "strict": "156",
+   "flexible": "156",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 128,
+   "strate": "A",
+   "modele": "Qwen/Qwen3-1.7B-Base",
+   "i": 1230,
+   "strict": "440",
+   "flexible": "440",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 129,
+   "strate": "A",
+   "modele": "HuggingFaceTB/SmolLM3-3B-Base",
+   "i": 1053,
+   "strict": "55",
+   "flexible": "55",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 130,
+   "strate": "A",
+   "modele": "Qwen/Qwen2.5-1.5B",
+   "i": 766,
+   "strict": "8",
+   "flexible": "8",
+   "ok_strict": false,
+   "ok_flexible": false
+  },
+  {
+   "n": 131,
+   "strate": "A",
+   "modele": "Qwen/Qwen2.5-1.5B",
+   "i": 150,
+   "strict": "3.5",
+   "flexible": "3.5",
+   "ok_strict": false,
+   "ok_flexible": false
+  },
+  {
+   "n": 132,
+   "strate": "A",
+   "modele": "HuggingFaceTB/SmolLM3-3B-Base",
+   "i": 442,
+   "strict": "49",
+   "flexible": "49",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 133,
+   "strate": "A",
+   "modele": "Qwen/Qwen3-1.7B-Base",
+   "i": 410,
+   "strict": "-1.50",
+   "flexible": "-1.50",
+   "ok_strict": false,
+   "ok_flexible": false
+  },
+  {
+   "n": 134,
+   "strate": "D",
+   "modele": "Qwen/Qwen3-1.7B-Base",
+   "i": 150,
+   "strict": "[invalid]",
+   "flexible": "4.",
+   "ok_strict": false,
+   "ok_flexible": true
+  },
+  {
+   "n": 135,
+   "strate": "A",
+   "modele": "Qwen/Qwen2.5-1.5B",
+   "i": 609,
+   "strict": "7",
+   "flexible": "7",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 136,
+   "strate": "D",
+   "modele": "Qwen/Qwen3-1.7B-Base",
+   "i": 885,
+   "strict": "[invalid]",
+   "flexible": "500.",
+   "ok_strict": false,
+   "ok_flexible": true
+  },
+  {
+   "n": 137,
+   "strate": "A",
+   "modele": "HuggingFaceTB/SmolLM3-3B-Base",
+   "i": 356,
+   "strict": "21",
+   "flexible": "21",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 138,
+   "strate": "D",
+   "modele": "Qwen/Qwen3-1.7B-Base",
+   "i": 772,
+   "strict": "[invalid]",
+   "flexible": "50.",
+   "ok_strict": false,
+   "ok_flexible": true
+  },
+  {
+   "n": 139,
+   "strate": "A",
+   "modele": "Qwen/Qwen3-1.7B-Base",
+   "i": 669,
+   "strict": "132",
+   "flexible": "132",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 140,
+   "strate": "A",
+   "modele": "Qwen/Qwen2.5-1.5B",
+   "i": 1015,
+   "strict": "78",
+   "flexible": "78",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 141,
+   "strate": "A",
+   "modele": "HuggingFaceTB/SmolLM3-3B-Base",
+   "i": 1058,
+   "strict": "250",
+   "flexible": "250",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 142,
+   "strate": "A",
+   "modele": "Qwen/Qwen2.5-1.5B",
+   "i": 396,
+   "strict": "3",
+   "flexible": "3",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 143,
+   "strate": "A",
+   "modele": "Qwen/Qwen2.5-1.5B",
+   "i": 142,
+   "strict": "140",
+   "flexible": "140",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 144,
+   "strate": "A",
+   "modele": "HuggingFaceTB/SmolLM3-3B-Base",
+   "i": 1127,
+   "strict": "750",
+   "flexible": "750",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 145,
+   "strate": "A",
+   "modele": "Qwen/Qwen3-1.7B-Base",
+   "i": 1077,
+   "strict": "[invalid]",
+   "flexible": "130",
+   "ok_strict": false,
+   "ok_flexible": false
+  },
+  {
+   "n": 146,
+   "strate": "A",
+   "modele": "HuggingFaceTB/SmolLM3-3B-Base",
+   "i": 326,
+   "strict": "14",
+   "flexible": "14",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 147,
+   "strate": "D",
+   "modele": "Qwen/Qwen3-1.7B-Base",
+   "i": 459,
+   "strict": "[invalid]",
+   "flexible": "2.",
+   "ok_strict": false,
+   "ok_flexible": true
+  },
+  {
+   "n": 148,
+   "strate": "A",
+   "modele": "Qwen/Qwen2.5-1.5B",
+   "i": 166,
+   "strict": "5",
+   "flexible": "5",
+   "ok_strict": true,
+   "ok_flexible": true
+  },
+  {
+   "n": 149,
+   "strate": "A",
+   "modele": "Qwen/Qwen2.5-1.5B",
+   "i": 672,
+   "strict": "[invalid]",
+   "flexible": "-2",
+   "ok_strict": false,
+   "ok_flexible": false
+  },
+  {
+   "n": 150,
+   "strate": "A",
+   "modele": "Qwen/Qwen2.5-1.5B",
+   "i": 62,
+   "strict": "[invalid]",
+   "flexible": "750000",
+   "ok_strict": false,
+   "ok_flexible": false
+  }
+ ]
+}
