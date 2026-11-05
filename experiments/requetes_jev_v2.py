@@ -27,11 +27,14 @@ def question(ordre):
 if __name__ == "__main__":
     items = json.loads((D / "v2" / "a_etiqueter.json").read_text())
     refs = json.loads((D / "refs.json").read_text())
+    refs_en = json.loads((D / "refs_en.json").read_text())  # amendement 3
     req = []
     for x in items:
         st = {"prompt": x["prompt"], "continuation": x["suite"].replace("<|endoftext|>", ""), "reference": refs.get(str(x["idx"]), "")}
         for passe in ("direct", "inverse", "relance"):
             req.append({"n": x["n"], "passe": passe, "model": MODELE, "state": st,
                         "questions": question("inverse" if passe == "inverse" else "direct")})
+        req.append({"n": x["n"], "passe": "anglais", "model": MODELE, "state": dict(st, reference=refs_en[str(x["idx"])]),
+                    "questions": question("direct")})
     (D / "v2" / "requetes_jev.json").write_text(json.dumps(req, ensure_ascii=False))
     print(len(req), "requêtes,", len(items), "suites")

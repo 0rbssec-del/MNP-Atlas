@@ -142,3 +142,12 @@ remplacer le classifieur lexical comme juge, mesuré contre les étiquettes à l
 
 **Prédiction de l'assistant** [spéculation] : UTILE 30 %, INTERMÉDIAIRE 45 %, NON FIABLE 25 %. Erreur attendue :
 « vrai mais à côté » rendu hallucinated, comme dans l'essai sur E3.
+
+## Amendement 3 (5 nov. 2026, avant tout appel de JEV sur l'échantillon v2) : passe « anglais »
+
+**Pourquoi.** Les références montrées à Erick sont en français, la consigne de JEV en anglais ; TypeSafe indique une
+exactitude moindre hors de l'anglais. La passe principale (direct, références en français) reste celle du verdict.
+
+**Ajout.** Une 4e passe par suite : ordre direct, références traduites en anglais par l'assistant
+(`refs_en.json`, traduction littérale, sans ajout d'information). Descriptif seulement : κ(JEV anglais, Erick) comparé à
+κ(JEV français, Erick), avec IC95 par bootstrap apparié, et part des étiquettes qui changent.
