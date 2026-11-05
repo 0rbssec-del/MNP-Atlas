@@ -112,3 +112,33 @@ divergent sur 3 suites ou plus, on discute des règles avant l'étiquetage réel
 
 **Prédictions de l'assistant** [spéculation] : FIABLE 10 %, INCERTAIN 30 %, NON FIABLE 60 %. Je m'attends à une
 précision CORRECT encore inférieure à 0,60, à cause de « not » dans des suites qui acceptent la prémisse.
+
+## Amendement 2 (5 nov. 2026, avant tout appel de JEV sur l'échantillon v2) : JEV en second juge
+
+**Question.** JEV (TypeSafe, modèle « System One » qui rend une décision typée et des probabilités, sans texte) peut-il
+remplacer le classifieur lexical comme juge, mesuré contre les étiquettes à l'aveugle d'Erick ?
+
+**Montage** (`experiments/requetes_jev_v2.py`, texte des questions figé dans ce fichier) :
+- modèle `jev-1.14.0` (version figée) ; une question Choice à trois options (correct, hallucinated, other) dont les
+  descriptions reprennent les règles v2 ; l'état contient le prompt, la suite et la ligne de référence montrée à Erick ;
+- trois passes par suite : options dans l'ordre direct, dans l'ordre inverse, et relance identique de l'ordre direct ;
+- les appels n'ont lieu qu'après réception des étiquettes v2 ; Erick ne voit jamais les réponses de JEV avant d'avoir
+  fini. Seul essai préalable : 3 suites d'entraînement (E2, E3, E6), hors échantillon ; E3 (« vrai mais à côté ») a été
+  rendue hallucinated à 0,80 au lieu d'other.
+
+**Analyses**, sur les 160 nouvelles suites (passe directe) :
+1. κ(JEV, Erick) et κ(classifieur lexical, Erick), trois classes ; différence avec IC95 par bootstrap apparié.
+2. Précision de JEV par classe (IC95 de Wilson).
+3. Témoins : part des étiquettes qui changent entre ordre direct et ordre inverse, et entre passe directe et relance.
+4. Descriptif : calibration (ECE sur la probabilité de l'option choisie, contre l'étiquette d'Erick) ; exactitude des
+   réponses à probabilité ≥ 0,9 ; accord sur les 20 reprises.
+
+**Critères.**
+- **JEV JUGE UTILE** : κ(JEV, Erick) ≥ 0,60, et κ(JEV) − κ(lexical) ≥ 0,20 avec un IC95 dont la borne basse est > 0.
+- **JEV NON FIABLE** : κ(JEV, Erick) < 0,40.
+- **INTERMÉDIAIRE** sinon.
+- **Témoin d'ordre** : si plus de 10 % des étiquettes changent entre ordre direct et ordre inverse, le verdict JUGE UTILE
+  ne peut pas être accordé (il devient INTERMÉDIAIRE).
+
+**Prédiction de l'assistant** [spéculation] : UTILE 30 %, INTERMÉDIAIRE 45 %, NON FIABLE 25 %. Erreur attendue :
+« vrai mais à côté » rendu hallucinated, comme dans l'essai sur E3.
