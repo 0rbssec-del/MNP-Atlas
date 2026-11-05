@@ -115,3 +115,21 @@ Je m'attends à ce que l'extracteur strict sous-estime surtout les modèles de b
 2. **La note finale citera ces deux travaux.** La contribution annoncée se limite à ce qu'ils ne font pas :
    - la validation humaine à l'aveugle des deux extracteurs de GSM8K ;
    - l'effet sur le classement de modèles de base proches.
+
+## Amendement 2 (5 nov. 2026, avant tout calcul) : fidélité à lm-evaluation-harness
+
+Pour que la notation automatique soit exactement celle de l'outil audité, trois points du plan s'alignent sur le fichier
+`gsm8k.yaml` et sur `exact_match_hf_evaluate` au commit `b733598` :
+
+1. **Comparaison** : correspondance exacte de chaînes après les `regexes_to_ignore` de l'outil (« , », « $ »,
+   « (?s).*#### », « \.$ ») et passage en minuscules, et non comparaison numérique. La comparaison numérique reste un
+   descriptif.
+2. **Arrêt de la génération** : les marqueurs de l'outil (« Question: », « </s> », « <|im_end|> »), sans le double saut
+   de ligne prévu au départ ; 256 jetons au plus.
+3. **Exemples** : les 5 premiers problèmes du jeu d'entraînement, au format « Question: … / Answer: … » de l'outil (qui,
+   lui, tire ses exemples au hasard).
+
+**Tests avant exécution.** Le script `experiments/audit_gsm8k.py` vérifie 20 réponses synthétiques contre la logique
+copiée de la source. Au premier essai, il a signalé deux valeurs attendues fausses, écrites par l'assistant : la règle
+flexible prend la dernière correspondance, « 2 » dans « value 10 and 2 » et « 3 » dans « costs 2, 3 ». Le code était
+conforme, et les valeurs attendues ont été corrigées.
