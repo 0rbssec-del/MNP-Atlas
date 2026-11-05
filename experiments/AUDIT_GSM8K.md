@@ -133,3 +133,33 @@ Pour que la notation automatique soit exactement celle de l'outil audité, trois
 copiée de la source. Au premier essai, il a signalé deux valeurs attendues fausses, écrites par l'assistant : la règle
 flexible prend la dernière correspondance, « 2 » dans « value 10 and 2 » et « 3 » dans « costs 2, 3 ». Le code était
 conforme, et les valeurs attendues ont été corrigées.
+
+## Amendement 3 (5 nov. 2026, après l'étape 1, avant ce test) : témoin de relance échoué pour Qwen2.5-1.5B
+
+**Constat.** Relance identique à 64 % (32/50) pour Qwen2.5-1.5B, contre 98 % et 100 % pour les deux autres. Le témoin
+relançait les 50 premiers problèmes en lots de 32 : le premier lot (1–32) avait la même composition que dans la passe
+principale, le second (33–50) non (18 problèmes au lieu de 32, donc un remplissage à gauche différent).
+
+**Hypothèse testée.** Les écarts viennent de la composition des lots (forme du calcul en float16), et non d'un
+non-déterminisme à lot identique. Ce test ne change ni l'échantillon d'étiquetage ni les analyses de l'étape 2, qui portent
+sur les sorties figées de l'étape 1.
+
+**Montage** (`experiments/relance_gsm8k.py`, Qwen2.5-1.5B, mêmes prompts, même décodage) :
+- R1a, R1b : problèmes 1–64 en lots de 32, deux fois (mêmes lots que la passe principale) ;
+- R2 : problèmes 1–50 en lots de 32 (reproduction du témoin) ;
+- R3 : problèmes 1–200 en lots de 1 (aucun remplissage) ; les 20 premiers relancés une fois (R3b) ;
+- secondaire, R4 : R1a et R2 refaits en float32.
+
+**Critères.**
+- **COMPOSITION DU LOT** si R1a = R1b sur 64/64, si R2 = R1a sur les 32 problèmes du lot commun, et si au moins un des
+  18 problèmes du lot modifié diffère.
+- **NON-DÉTERMINISME À LOT FIXE** si R1a ≠ R1b sur au moins un problème.
+- **INDÉTERMINÉ** sinon.
+- **Effet sur le score** (descriptif, avec critère) : différence d'exactitude (strict et flexible) entre R3 et la passe
+  principale sur les 200 problèmes, IC95 par bootstrap apparié. **EFFET DÉTECTÉ** si l'IC95 exclut 0, sinon « effet
+  non détecté à n = 200 », avec la largeur de l'IC.
+- Descriptif : R1a comparé à la passe principale (même matériel, autre session) ; part des problèmes de R3 dont la
+  réponse change ; R4 dit si l'effet de composition persiste en float32.
+
+**Prédiction de l'assistant** [spéculation] : COMPOSITION DU LOT 75 %, NON-DÉTERMINISME À LOT FIXE 15 %,
+INDÉTERMINÉ 10 % ; effet sur le score non détecté à n = 200 (70 %).
