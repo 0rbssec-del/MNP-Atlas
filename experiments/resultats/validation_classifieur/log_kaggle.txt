@@ -1,0 +1,109 @@
+8.1s 1 0.00s - Debugger warning: It seems that frozen modules are being used, which may
+8.1s 2 0.00s - make the debugger miss breakpoints. Please pass -Xfrozen_modules=off
+8.1s 3 0.00s - to python to disable frozen modules.
+8.1s 4 0.00s - Note: Debugging will proceed. Set PYDEVD_DISABLE_FILE_VALIDATION=1 to disable this validation.
+8.7s 5 0.00s - Debugger warning: It seems that frozen modules are being used, which may
+8.7s 6 0.00s - make the debugger miss breakpoints. Please pass -Xfrozen_modules=off
+8.7s 7 0.00s - to python to disable frozen modules.
+8.7s 8 0.00s - Note: Debugging will proceed. Set PYDEVD_DISABLE_FILE_VALIDATION=1 to disable this validation.
+17.3s 9 /tmp/ipykernel_22/3756159555.py:815: DeprecationWarning: Python 3.14 will, by default, filter extracted tar archives and reject files or modify their metadata. Use the filter argument to control this behavior.
+17.3s 10 t.extractall(D)
+17.3s 11 
+17.3s 12 /tmp/ipykernel_22/3756159555.py:815: DeprecationWarning: Python 3.14 will, by default, filter extracted tar archives and reject files or modify their metadata. Use the filter argument to control this behavior.
+17.3s 13 t.extractall(D)
+17.3s 14 2 GPU : ['Tesla T4', 'Tesla T4']
+17.5s 15 Pas de secret HF_TOKEN attaché (téléchargement plus lent) : BackendError
+41.4s 16 Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+192.8s 17 [Core] Couches suivies : [0, 14, 27]
+192.8s 18 [Core] Échantillonneur : gumbel, T = 0.7, top-p = 1.0 ; chat = False
+192.8s 19 [ 0] réservoir {'CORRECT': 19, 'HALLUCINATION': 13, 'OTHER': 28} ; 6 paires ; même classe {'C->H': 6, 'H->C': 6} ; 49 s
+241.4s 20 [ 1] réservoir {'CORRECT': 2, 'HALLUCINATION': 18, 'OTHER': 40} ; 6 paires ; même classe {'C->H': 6, 'H->C': 6} ; 49 s
+291.3s 21 [ 2] réservoir {'CORRECT': 34, 'HALLUCINATION': 11, 'OTHER': 15} ; 6 paires ; même classe {'C->H': 6, 'H->C': 6} ; 50 s
+344.2s 22 [ 3] réservoir {'CORRECT': 8, 'HALLUCINATION': 9, 'OTHER': 43} ; 6 paires ; même classe {'C->H': 6, 'H->C': 6} ; 53 s
+397.7s 23 [ 4] réservoir {'CORRECT': 3, 'HALLUCINATION': 21, 'OTHER': 36} ; 6 paires ; même classe {'C->H': 6, 'H->C': 6} ; 54 s
+451.4s 24 [ 5] réservoir {'CORRECT': 34, 'HALLUCINATION': 12, 'OTHER': 14} ; 6 paires ; même classe {'C->H': 6, 'H->C': 6} ; 54 s
+490.1s 25 [ 6] réservoir {'CORRECT': 38, 'HALLUCINATION': 20, 'OTHER': 2} ; 6 paires ; même classe {'C->H': 0, 'H->C': 0} ; 39 s
+532.5s 26 [ 7] réservoir {'CORRECT': 37, 'HALLUCINATION': 8, 'OTHER': 15} ; 6 paires ; même classe {'C->H': 6, 'H->C': 6} ; 42 s
+571.4s 27 [ 8] réservoir {'CORRECT': 39, 'HALLUCINATION': 1, 'OTHER': 20} ; 6 paires ; même classe {'C->H': 6, 'H->C': 0} ; 39 s
+613.6s 28 [ 9] réservoir {'CORRECT': 5, 'HALLUCINATION': 43, 'OTHER': 12} ; 6 paires ; même classe {'C->H': 6, 'H->C': 6} ; 42 s
+657.2s 29 [10] réservoir {'CORRECT': 11, 'HALLUCINATION': 25, 'OTHER': 24} ; 6 paires ; même classe {'C->H': 6, 'H->C': 6} ; 44 s
+710.6s 30 [11] réservoir {'CORRECT': 16, 'HALLUCINATION': 17, 'OTHER': 27} ; 6 paires ; même classe {'C->H': 6, 'H->C': 6} ; 53 s
+764.3s 31 [12] réservoir {'CORRECT': 12, 'HALLUCINATION': 18, 'OTHER': 30} ; 6 paires ; même classe {'C->H': 6, 'H->C': 6} ; 54 s
+817.9s 32 [13] réservoir {'CORRECT': 24, 'HALLUCINATION': 21, 'OTHER': 15} ; 6 paires ; même classe {'C->H': 6, 'H->C': 6} ; 54 s
+874.3s 33 [14] réservoir {'CORRECT': 18, 'HALLUCINATION': 14, 'OTHER': 28} ; 6 paires ; même classe {'C->H': 6, 'H->C': 6} ; 56 s
+924.8s 34 [15] réservoir {'CORRECT': 3, 'HALLUCINATION': 20, 'OTHER': 37} ; 6 paires ; même classe {'C->H': 6, 'H->C': 0} ; 50 s
+977.8s 35 [16] réservoir {'CORRECT': 11, 'HALLUCINATION': 24, 'OTHER': 25} ; 6 paires ; même classe {'C->H': 6, 'H->C': 6} ; 53 s
+996.6s 36 [17] réservoir {'CORRECT': 3, 'HALLUCINATION': 1, 'OTHER': 56} ; 2 paires ; même classe {'C->H': 2, 'H->C': 0} ; 19 s
+1040.8s 37 [18] réservoir {'CORRECT': 18, 'HALLUCINATION': 37, 'OTHER': 5} ; 6 paires ; même classe {'C->H': 6, 'H->C': 6} ; 44 s
+1088.5s 38 [19] réservoir {'CORRECT': 5, 'HALLUCINATION': 43, 'OTHER': 12} ; 6 paires ; même classe {'C->H': 6, 'H->C': 6} ; 48 s
+1136.4s 39 [20] réservoir {'CORRECT': 15, 'HALLUCINATION': 45, 'OTHER': 0} ; 6 paires ; même classe {'C->H': 6, 'H->C': 6} ; 48 s
+1190.0s 40 [21] réservoir {'CORRECT': 6, 'HALLUCINATION': 32, 'OTHER': 22} ; 6 paires ; même classe {'C->H': 6, 'H->C': 6} ; 54 s
+1233.8s 41 [22] réservoir {'CORRECT': 2, 'HALLUCINATION': 56, 'OTHER': 2} ; 6 paires ; même classe {'C->H': 0, 'H->C': 6} ; 44 s
+1281.4s 42 [23] réservoir {'CORRECT': 20, 'HALLUCINATION': 36, 'OTHER': 4} ; 6 paires ; même classe {'C->H': 6, 'H->C': 6} ; 48 s
+1334.5s 43 [24] réservoir {'CORRECT': 23, 'HALLUCINATION': 21, 'OTHER': 16} ; 6 paires ; même classe {'C->H': 6, 'H->C': 6} ; 53 s
+1387.4s 44 [25] réservoir {'CORRECT': 4, 'HALLUCINATION': 56, 'OTHER': 0} ; 6 paires ; même classe {'C->H': 6, 'H->C': 6} ; 53 s
+1435.1s 45 [26] réservoir {'CORRECT': 7, 'HALLUCINATION': 52, 'OTHER': 1} ; 6 paires ; même classe {'C->H': 6, 'H->C': 6} ; 48 s
+1490.4s 46 [27] réservoir {'CORRECT': 6, 'HALLUCINATION': 43, 'OTHER': 11} ; 6 paires ; même classe {'C->H': 6, 'H->C': 6} ; 55 s
+1493.0s 47 [paires] 28 : aucune paire discordante
+1542.8s 48 [29] réservoir {'CORRECT': 2, 'HALLUCINATION': 58, 'OTHER': 0} ; 6 paires ; même classe {'C->H': 6, 'H->C': 6} ; 50 s
+1545.2s 49 [paires] 30 : aucune paire discordante
+1547.8s 50 [paires] 31 : aucune paire discordante
+1600.8s 51 [32] réservoir {'CORRECT': 22, 'HALLUCINATION': 38, 'OTHER': 0} ; 6 paires ; même classe {'C->H': 6, 'H->C': 6} ; 53 s
+1603.2s 52 [paires] 33 : aucune paire discordante
+1658.3s 53 [34] réservoir {'CORRECT': 4, 'HALLUCINATION': 56, 'OTHER': 0} ; 6 paires ; même classe {'C->H': 6, 'H->C': 6} ; 55 s
+1715.0s 54 [35] réservoir {'CORRECT': 1, 'HALLUCINATION': 59, 'OTHER': 0} ; 6 paires ; même classe {'C->H': 0, 'H->C': 6} ; 57 s
+1771.5s 55 [36] réservoir {'CORRECT': 1, 'HALLUCINATION': 59, 'OTHER': 0} ; 6 paires ; même classe {'C->H': 0, 'H->C': 6} ; 57 s
+1823.2s 56 [37] réservoir {'CORRECT': 1, 'HALLUCINATION': 59, 'OTHER': 0} ; 6 paires ; même classe {'C->H': 0, 'H->C': 6} ; 52 s
+1881.9s 57 [38] réservoir {'CORRECT': 1, 'HALLUCINATION': 59, 'OTHER': 0} ; 6 paires ; même classe {'C->H': 0, 'H->C': 6} ; 59 s
+1884.6s 58 [paires] 39 : aucune paire discordante
+1937.7s 59 [40] réservoir {'CORRECT': 2, 'HALLUCINATION': 58, 'OTHER': 0} ; 6 paires ; même classe {'C->H': 6, 'H->C': 6} ; 53 s
+2011.4s 60 [41] réservoir {'CORRECT': 4, 'HALLUCINATION': 54, 'OTHER': 2} ; 6 paires ; même classe {'C->H': 6, 'H->C': 6} ; 74 s
+2078.7s 61 [42] réservoir {'CORRECT': 7, 'HALLUCINATION': 52, 'OTHER': 1} ; 6 paires ; même classe {'C->H': 6, 'H->C': 6} ; 67 s
+2148.4s 62 [43] réservoir {'CORRECT': 3, 'HALLUCINATION': 57, 'OTHER': 0} ; 6 paires ; même classe {'C->H': 6, 'H->C': 6} ; 70 s
+2210.4s 63 [44] réservoir {'CORRECT': 6, 'HALLUCINATION': 53, 'OTHER': 1} ; 6 paires ; même classe {'C->H': 6, 'H->C': 6} ; 62 s
+2213.2s 64 [paires] 45 : aucune paire discordante
+2216.0s 65 [paires] 46 : aucune paire discordante
+2218.9s 66 [paires] 47 : aucune paire discordante
+2221.4s 67 [paires] 48 : aucune paire discordante
+2224.5s 68 [paires] 49 : aucune paire discordante
+2283.1s 69 [50] réservoir {'CORRECT': 58, 'HALLUCINATION': 2, 'OTHER': 0} ; 6 paires ; même classe {'C->H': 6, 'H->C': 0} ; 59 s
+2285.8s 70 [paires] 51 : aucune paire discordante
+2288.5s 71 [paires] 52 : aucune paire discordante
+2291.2s 72 [paires] 53 : aucune paire discordante
+2334.8s 73 [54] réservoir {'CORRECT': 51, 'HALLUCINATION': 8, 'OTHER': 1} ; 6 paires ; même classe {'C->H': 6, 'H->C': 6} ; 44 s
+2337.5s 74 [paires] 55 : aucune paire discordante
+2381.2s 75 [56] réservoir {'CORRECT': 59, 'HALLUCINATION': 1, 'OTHER': 0} ; 6 paires ; même classe {'C->H': 6, 'H->C': 0} ; 44 s
+2429.4s 76 [57] réservoir {'CORRECT': 30, 'HALLUCINATION': 1, 'OTHER': 29} ; 6 paires ; même classe {'C->H': 6, 'H->C': 0} ; 48 s
+2431.5s 77 [paires] 58 : aucune paire discordante
+2475.3s 78 [59] réservoir {'CORRECT': 18, 'HALLUCINATION': 7, 'OTHER': 35} ; 6 paires ; même classe {'C->H': 6, 'H->C': 6} ; 44 s
+2522.7s 79 [60] réservoir {'CORRECT': 42, 'HALLUCINATION': 3, 'OTHER': 15} ; 6 paires ; même classe {'C->H': 6, 'H->C': 6} ; 47 s
+2536.1s 80 [PAIRES] 272 paires sur 46 prompts ; unités avec source même classe : {'C->H': 236, 'H->C': 234}
+2536.1s 81 [TÉMOIN −] auto-patch à L24 identique à la base : 99.8%
+2536.1s 82 [C->H] échange de jeton Δ +1.11 [+0.78 ; +1.52]
+2536.1s 83 [C->H] E (croisé − même classe) : L24 +0.09 [-0.06 ; +0.28]
+2536.1s 84 [C->H] croisé − base : L24 +0.15 | même classe − base : L24 +0.06
+2536.1s 85 [C->H] part « Autre » : base 0.13 ; echange 0.14 ; croise_L24 0.30 ; meme_L24 0.32
+2536.1s 86 [H->C] échange de jeton Δ +1.27 [+0.87 ; +1.77]
+2536.1s 87 [H->C] E (croisé − même classe) : L24 +0.46 [+0.13 ; +0.86]
+2536.1s 88 [H->C] croisé − base : L24 +0.32 | même classe − base : L24 -0.08
+2536.1s 89 [H->C] part « Autre » : base 0.13 ; echange 0.13 ; croise_L24 0.22 ; meme_L24 0.22
+2536.1s 90 [A*] asymétrie corrigée par le témoin même classe : L24 -0.37 [-0.75 ; -0.04]
+2536.1s 91 [A sans témoin, bootstrap des prompts] L24 -0.17 [-0.59 ; +0.21]
+2536.1s 92 [VERDICT] couche fixée L24 : ASYMÉTRIE INVERSE
+2536.1s 93 [STRICT] A* L24 = -0.31 [-0.74 ; +0.07] → INDÉTERMINÉ
+2536.1s 94 [SORTIE] /kaggle/working/bassin_confirmation_textes.json (39.9 min)
+2540.9s 95 total 13776
+2540.9s 96 drwxr-xr-x 3 root root     4096 Nov  5 05:02 .
+2540.9s 97 drwxr-xr-x 8 root root     4096 Nov  5 04:20 ..
+2540.9s 98 -rw-r--r-- 1 root root 12708703 Nov  5 05:02 bassin_confirmation_textes.json
+2540.9s 99 -rw-r--r-- 1 root root  1267252 Nov  5 05:02 bassin_confirmation_textes.json.gz
+2540.9s 100 drwxr-xr-x 5 root root     4096 Nov  5 04:20 MNP-Atlas
+2540.9s 101 -rw-r--r-- 1 root root   112815 Nov  5 05:02 __notebook__.ipynb
+2544.1s 102 /usr/local/lib/python3.13/dist-packages/mistune.py:435: SyntaxWarning: invalid escape sequence '\|'
+2544.1s 103 cells[i][c] = re.sub('\\\\\|', '|', cell)
+2544.3s 104 /usr/local/lib/python3.13/dist-packages/nbconvert/filters/filter_links.py:36: SyntaxWarning: invalid escape sequence '\_'
+2544.3s 105 text = re.sub(r'_', '\_', text) # Escape underscores in display text
+2545.1s 106 [NbConvertApp] Converting notebook __notebook__.ipynb to notebook
+2545.2s 107 [NbConvertApp] Writing 108380 bytes to __notebook__.ipynb
+2547.6s 108 [NbConvertApp] Converting notebook __notebook__.ipynb to html
+2548.1s 109 [NbConvertApp] Writing 396880 bytes to __results__.html
