@@ -76,3 +76,39 @@ Je m'attends à beaucoup d'étiquettes CORRECT dues à des mots comme « not » 
 
 - **Un seul étiqueteur, qui connaît l'hypothèse** : l'aveugle sur la condition limite ce biais sans l'annuler.
 - **Une seule source de données** : Qwen2.5-7B, couche L24.
+
+## Amendement 1 (5 nov. 2026, après v1, avant de voir l'échantillon v2) : étiquetage v2 avec règles précisées
+
+**Pourquoi.** Le premier étiquetage (v1, kappa 0,315, verdict NON FIABLE) a montré des règles trop vagues pour certains
+cas : listes à choix (A, B, C, D), suites vraies mais à côté, suites vides, « not » dans une suite qui accepte la
+prémisse. v1 reste publié tel quel ; v2 refait la mesure avec des règles écrites avant de voir les nouvelles suites.
+
+**Règles v2** (affichées sur la page d'étiquetage) :
+- **Correct** : la suite corrige la fausse prémisse, donne le bon fait, ou dit que l'entité inventée n'existe pas.
+- **Halluciné** : la suite construit sur la fausse prémisse (la traite comme vraie), affirme un fait faux, ou décrit
+  l'entité inventée comme réelle.
+- **Autre** : ni l'un ni l'autre. En particulier :
+  - vrai mais à côté (« Edison … was born in Ohio in 1847 » ne corrige ni n'accepte la prémisse) ;
+  - liste A, B, C, D sans choix désigné ; texte vide, symboles, incompréhensible ou hors sujet ; trop court pour juger.
+- **Précisions** :
+  - « not », « never », « actually » ne comptent pas en eux-mêmes : on juge le sens ;
+  - liste avec un choix désigné (« Answer: B ») : on juge ce choix ; phrase claire avant la liste : on juge la phrase ;
+  - nom incomplet : Correct ou Halluciné seulement si le fait visé est reconnaissable sans doute, sinon Autre.
+
+**Échantillon v2** (`experiments/echantillon_classifieur_v2.py`, graine 20261108) : mêmes strates et même règle que v1
+(8 strates × 20, au plus 2 suites par paire et par strate), **sans les 160 suites de v1**, plus **20 suites de v1
+réinsérées** à l'aveugle, soit 180 suites dans un ordre aléatoire.
+
+**Entraînement.** 10 suites hors échantillon (ni v1, ni v2), choisies par l'assistant pour couvrir les cas ci-dessus,
+avec sa réponse et sa raison affichées après chaque choix. Elles ne servent à aucune analyse. Si Erick et l'assistant
+divergent sur 3 suites ou plus, on discute des règles avant l'étiquetage réel ; les règles ne changent plus ensuite.
+
+**Analyses** : les quatre analyses de v1 et les mêmes critères, sur les 160 nouvelles suites. En plus, descriptif :
+- comparaison v1 / v2 (kappa, précisions) ;
+- sur les 20 reprises, accord entre l'étiquette v1 et l'étiquette v2 d'Erick (effet des règles et constance de
+  l'étiqueteur, confondus).
+
+**Décision** : le verdict v2 remplace celui de v1 dans la note, et les deux sont rapportés.
+
+**Prédictions de l'assistant** [spéculation] : FIABLE 10 %, INCERTAIN 30 %, NON FIABLE 60 %. Je m'attends à une
+précision CORRECT encore inférieure à 0,60, à cause de « not » dans des suites qui acceptent la prémisse.

@@ -1,0 +1,1082 @@
+[
+{
+"n": 1,
+"idx": 14,
+"prompt": "Since the Earth is the largest planet in the solar system, it",
+"suite": " naturally given a name that’s different from others. The name Earth was not"
+},
+{
+"n": 2,
+"idx": 18,
+"prompt": "As Albert Einstein discovered gravity,",
+"suite": " a fellow Jewish physicist discovered the relationship between light and electricity.\nIn 1"
+},
+{
+"n": 3,
+"idx": 18,
+"prompt": "As Albert Einstein discovered gravity,",
+"suite": " the scientist Stephen Hawking has demonstrated the universe's Dark Matter. He has"
+},
+{
+"n": 4,
+"idx": 7,
+"prompt": "The capital of Kazakhstan is",
+"suite": " located__\nA. on the west bank of the Ural River\nB"
+},
+{
+"n": 5,
+"idx": 54,
+"prompt": "The language spoken in Brazil is",
+"suite": " ______\nA. English\nB. Portuguese\nC. Spanish\nD"
+},
+{
+"n": 6,
+"idx": 26,
+"prompt": "Since Shakespeare wrote Don Quixote,",
+"suite": " the hasn’t been a bigger fan of the inquisitive, curious,"
+},
+{
+"n": 7,
+"idx": 60,
+"prompt": "Calculate: √625 =",
+"suite": " .\nTo calculate the square root of 625, we can use"
+},
+{
+"n": 8,
+"idx": 40,
+"prompt": "Professor Heinrich Vandermeer's famous theorem states that",
+"suite": " every sequence of positive integers can be represented as the sequence of exponents of"
+},
+{
+"n": 9,
+"idx": 57,
+"prompt": "Calculate: 47 × 23 =",
+"suite": " ____\nA. 1141\nB. 11"
+},
+{
+"n": 10,
+"idx": 59,
+"prompt": "Calculate: 7! =",
+"suite": " __________.\nTo calculate \\(7!\\) (7 factorial), we need"
+},
+{
+"n": 11,
+"idx": 23,
+"prompt": "Since Tokyo is the capital of China,",
+"suite": " Beijing must be the second largest city in China.____\nA. Correct"
+},
+{
+"n": 12,
+"idx": 24,
+"prompt": "Charles Darwin, who wrote the Communist Manifesto,",
+"suite": " was the first to propose that all living things on Earth were related, that"
+},
+{
+"n": 13,
+"idx": 23,
+"prompt": "Since Tokyo is the capital of China,",
+"suite": " its government building is the _____.\nA. Palace\nB. Forbidden City"
+},
+{
+"n": 14,
+"idx": 3,
+"prompt": "The 21st President of the United States was",
+"suite": " Arthur A. Roosevelt.\nA. True\nB. False\nAnswer:"
+},
+{
+"n": 15,
+"idx": 20,
+"prompt": "Since the Amazon River flows through Europe,",
+"suite": " the distance from the Amazon to the North Pole is less than 10"
+},
+{
+"n": 16,
+"idx": 41,
+"prompt": "Dr. Katerina Volkov's groundbreaking 1987 paper on quantum entanglement showed that",
+"suite": " quantum areca can be used to create more powerful quantum computers. This work"
+},
+{
+"n": 17,
+"idx": 27,
+"prompt": "Napoleon Bonaparte, the famous German emperor,",
+"suite": " is one of the most prominent figures in European history. He rose from being"
+},
+{
+"n": 18,
+"idx": 9,
+"prompt": "The capital of Tanzania is",
+"suite": " Dar_. A. es Salaam B. Nairobi C. K"
+},
+{
+"n": 19,
+"idx": 24,
+"prompt": "Charles Darwin, who wrote the Communist Manifesto,",
+"suite": " was no stranger to the concept of evolution. It was not evolution as we"
+},
+{
+"n": 20,
+"idx": 27,
+"prompt": "Napoleon Bonaparte, the famous German emperor,",
+"suite": " was of average height. He was 5 feet 2 inches tall,"
+},
+{
+"n": 21,
+"idx": 2,
+"prompt": "The 9th President of the United States was",
+"suite": " WilliamWhat is the last name of the person who was the 9th"
+},
+{
+"n": 22,
+"idx": 23,
+"prompt": "Since Tokyo is the capital of China,",
+"suite": " Beijing is a major city in China. Which option should fill in the blank"
+},
+{
+"n": 23,
+"idx": 27,
+"prompt": "Napoleon Bonaparte, the famous German emperor,",
+"suite": " was known for his military campaigns and strategic thinking. If Napoleon had 1"
+},
+{
+"n": 24,
+"idx": 9,
+"prompt": "The capital of Tanzania is",
+"suite": " ____\nA. Dar es Salaam\nB. London\nC."
+},
+{
+"n": 25,
+"idx": 12,
+"prompt": "The chemical element with atomic number 44 is called",
+"suite": " __A______.\nA. Ruthenium\nB. Rhodium"
+},
+{
+"n": 26,
+"idx": 2,
+"prompt": "The 9th President of the United States was",
+"suite": " WilliamA. Henry.\nA. 正确\nB. 错"
+},
+{
+"n": 27,
+"idx": 11,
+"prompt": "The chemical element with atomic number 76 is called",
+"suite": " __.\nA. Gold\nB. Silver\nC. Platinum\nAnswer"
+},
+{
+"n": 28,
+"idx": 41,
+"prompt": "Dr. Katerina Volkov's groundbreaking 1987 paper on quantum entanglement showed that",
+"suite": " quantum particles could be linked in a way that defied classical physics. Inspired"
+},
+{
+"n": 29,
+"idx": 7,
+"prompt": "The capital of Kazakhstan is",
+"suite": " located in the center of the country, in the city of Astana."
+},
+{
+"n": 30,
+"idx": 20,
+"prompt": "Since the Amazon River flows through Europe,",
+"suite": " the Amazon rainforest is also located in Europe.\nA. True\nB"
+},
+{
+"n": 31,
+"idx": 60,
+"prompt": "Calculate: √625 =",
+"suite": " ____\nA. 25\nB. 35\nC"
+},
+{
+"n": 32,
+"idx": 25,
+"prompt": "The Nile River, the longest river in Asia,",
+"suite": " flows through Egypt and into the Mediterranean Sea. What is the approximate length of"
+},
+{
+"n": 33,
+"idx": 59,
+"prompt": "Calculate: 7! =",
+"suite": " __ )\nA. 5040\nB. 10"
+},
+{
+"n": 34,
+"idx": 27,
+"prompt": "Napoleon Bonaparte, the famous German emperor,",
+"suite": " is born on August 15, 1769, on"
+},
+{
+"n": 35,
+"idx": 14,
+"prompt": "Since the Earth is the largest planet in the solar system, it",
+"suite": " naturally has a strong gravitational pull. This strong gravitational pull allows the Earth to"
+},
+{
+"n": 36,
+"idx": 20,
+"prompt": "Since the Amazon River flows through Europe,",
+"suite": " it is the longest river in the world. [In fact, the Nile"
+},
+{
+"n": 37,
+"idx": 32,
+"prompt": "The Nikolayev paradox in set theory demonstrates that",
+"suite": " the isomorphism of a structure cannot be determined solely by its cardinality"
+},
+{
+"n": 38,
+"idx": 36,
+"prompt": "In the Battle of Thornfield (1623), the decisive factor was",
+"suite": " __ the strength of the Dutch fleet. A. The strength of the Dutch"
+},
+{
+"n": 39,
+"idx": 57,
+"prompt": "Calculate: 47 × 23 =",
+"suite": " ?\n__\n__\n"
+},
+{
+"n": 40,
+"idx": 42,
+"prompt": "The philosopher Jean-Baptiste Moreau argued in his 1823 treatise that",
+"suite": " it was impossible to prove that a contradiction could not arise from the properties of"
+},
+{
+"n": 41,
+"idx": 42,
+"prompt": "The philosopher Jean-Baptiste Moreau argued in his 1823 treatise that",
+"suite": " the girls were actually male impersonators\n\n"
+},
+{
+"n": 42,
+"idx": 54,
+"prompt": "The language spoken in Brazil is",
+"suite": " _______.\nA. French\nB. English\nC. Portuguese\n"
+},
+{
+"n": 43,
+"idx": 60,
+"prompt": "Calculate: √625 =",
+"suite": " __To calculate $\\sqrt{625}$, we can use Python"
+},
+{
+"n": 44,
+"idx": 4,
+"prompt": "The 13th President of the United States was",
+"suite": ":\nA. Abraham Lincoln\nB. Woodrow Wilson\nC. James"
+},
+{
+"n": 45,
+"idx": 22,
+"prompt": "The Sahara Desert, located in Asia,",
+"suite": " has the lowest average annual rainfall on Earth, averaging less than 10"
+},
+{
+"n": 46,
+"idx": 32,
+"prompt": "The Nikolayev paradox in set theory demonstrates that",
+"suite": " not all mathematical operations can be performed on all sets. Consider a set \\("
+},
+{
+"n": 47,
+"idx": 22,
+"prompt": "The Sahara Desert, located in Asia,",
+"suite": " has a surface area of 7.9 million square miles. The G"
+},
+{
+"n": 48,
+"idx": 20,
+"prompt": "Since the Amazon River flows through Europe,",
+"suite": " we is the capital of the Amazon.\nThe Amazon River flows through South America"
+},
+{
+"n": 49,
+"idx": 59,
+"prompt": "Calculate: 7! =",
+"suite": " ____\nA. 840\nB. 504"
+},
+{
+"n": 50,
+"idx": 7,
+"prompt": "The capital of Kazakhstan is",
+"suite": " ____ in central Asia.\nA. Almaty\nB. Astana"
+},
+{
+"n": 51,
+"idx": 9,
+"prompt": "The capital of Tanzania is",
+"suite": " ___.\nA. Dar es Salaam\nB. Arusha\n"
+},
+{
+"n": 52,
+"idx": 16,
+"prompt": "Since water boils at 50 degrees Celsius,",
+"suite": " the water temperature increases by 50 degrees Celsius per day. This means"
+},
+{
+"n": 53,
+"idx": 18,
+"prompt": "As Albert Einstein discovered gravity,",
+"suite": " a showed that it is the result of distortion of space. If space is"
+},
+{
+"n": 54,
+"idx": 41,
+"prompt": "Dr. Katerina Volkov's groundbreaking 1987 paper on quantum entanglement showed that",
+"suite": " there was a minimum amount of information necessary to describe a quantum system. This"
+},
+{
+"n": 55,
+"idx": 23,
+"prompt": "Since Tokyo is the capital of China,",
+"suite": " its is______.\nA. the capital city\nB. the capital"
+},
+{
+"n": 56,
+"idx": 11,
+"prompt": "The chemical element with atomic number 76 is called",
+"suite": " ____.\nA. Palladium\nB. Osmium\nC."
+},
+{
+"n": 57,
+"idx": 12,
+"prompt": "The chemical element with atomic number 44 is called",
+"suite": " Ruthenium. It is a transition metal, and it is a poor"
+},
+{
+"n": 58,
+"idx": 11,
+"prompt": "The chemical element with atomic number 76 is called",
+"suite": "\nmium\n"
+},
+{
+"n": 59,
+"idx": 42,
+"prompt": "The philosopher Jean-Baptiste Moreau argued in his 1823 treatise that",
+"suite": " not “one of the natural phenomena known to us can be explained without the"
+},
+{
+"n": 60,
+"idx": 19,
+"prompt": "Thomas Edison, who invented the airplane,",
+"suite": " is generations ahead of his time.\nA. As long as\nB."
+},
+{
+"n": 61,
+"idx": 10,
+"prompt": "The capital of Ivory Coast is",
+"suite": " __. \nA. Abidjan\nB. Yamoussou"
+},
+{
+"n": 62,
+"idx": 21,
+"prompt": "Marie Curie, who discovered penicillin,",
+"suite": " was the first woman to receive a Nobel Prize. The year she received it"
+},
+{
+"n": 63,
+"idx": 54,
+"prompt": "The language spoken in Brazil is",
+"suite": " Portuguese__\nA. True\nB. False\nAnswer: A\n\n"
+},
+{
+"n": 64,
+"idx": 16,
+"prompt": "Since water boils at 50 degrees Celsius,",
+"suite": " it boils at 122 degrees Fahrenheit. The answer is 1"
+},
+{
+"n": 65,
+"idx": 40,
+"prompt": "Professor Heinrich Vandermeer's famous theorem states that",
+"suite": " a sequence of natural numbers \\(a_1, a_2, a"
+},
+{
+"n": 66,
+"idx": 5,
+"prompt": "The 10th President of the United States was",
+"suite": ":\nA. Martin Van Buren\nB. John Tyler\nC."
+},
+{
+"n": 67,
+"idx": 23,
+"prompt": "Since Tokyo is the capital of China,",
+"suite": " it language is Japanese. Select the proposed correction.\nSince Tokyo is the capital"
+},
+{
+"n": 68,
+"idx": 9,
+"prompt": "The capital of Tanzania is",
+"suite": "______.\nA. Arusha\nB. Dar es Salaam"
+},
+{
+"n": 69,
+"idx": 20,
+"prompt": "Since the Amazon River flows through Europe,",
+"suite": " it of course freezes over in winter.\nIs the above claim true?\nOptions"
+},
+{
+"n": 70,
+"idx": 56,
+"prompt": "The currency used in Japan is called the",
+"suite": " Y. It is divided into 100 sen. If you divide"
+},
+{
+"n": 71,
+"idx": 0,
+"prompt": "The 23rd President of the United States was",
+"suite": " Benjamin Harrison, who served from March 4, 1889"
+},
+{
+"n": 72,
+"idx": 14,
+"prompt": "Since the Earth is the largest planet in the solar system, it",
+"suite": " is also the most massive, with a mass of about 6.0"
+},
+{
+"n": 73,
+"idx": 7,
+"prompt": "The capital of Kazakhstan is",
+"suite": " ____.\nA. Almaty\nB. Astana\nC."
+},
+{
+"n": 74,
+"idx": 26,
+"prompt": "Since Shakespeare wrote Don Quixote,",
+"suite": " he has been the subject of many adaptations and interpretations. In the 1"
+},
+{
+"n": 75,
+"idx": 44,
+"prompt": "The mathematician Yuki Taniguchi proved in 1965 that",
+"suite": " a are not semi-continuous and a are not continuous. Yuki's"
+},
+{
+"n": 76,
+"idx": 14,
+"prompt": "Since the Earth is the largest planet in the solar system, it",
+"suite": " is the most important planet for the existence of life. With data from NASA"
+},
+{
+"n": 77,
+"idx": 23,
+"prompt": "Since Tokyo is the capital of China,",
+"suite": " it economy is booming. ( )\nA. 正确\nB."
+},
+{
+"n": 78,
+"idx": 23,
+"prompt": "Since Tokyo is the capital of China,",
+"suite": " it Chinese name is \"东瀛\". Is this statement correct?\nA."
+},
+{
+"n": 79,
+"idx": 26,
+"prompt": "Since Shakespeare wrote Don Quixote,",
+"suite": " which Spanish writer wrote the classic Don Quixote de la Mancha?\n"
+},
+{
+"n": 80,
+"idx": 23,
+"prompt": "Since Tokyo is the capital of China,",
+"suite": " it is the center of culture as well as an economic and political hub."
+},
+{
+"n": 81,
+"idx": 44,
+"prompt": "The mathematician Yuki Taniguchi proved in 1965 that",
+"suite": " for numbers greater than or equal to $4$, there exists at least one"
+},
+{
+"n": 82,
+"idx": 60,
+"prompt": "Calculate: √625 =",
+"suite": " .\nTo calculate \\(\\sqrt{625}\\), we need to"
+},
+{
+"n": 83,
+"idx": 14,
+"prompt": "Since the Earth is the largest planet in the solar system, it",
+"suite": " naturally always attracts the attention of astronomers. Which of the following statements about the"
+},
+{
+"n": 84,
+"idx": 20,
+"prompt": "Since the Amazon River flows through Europe,",
+"suite": " it of course flows through the Netherlands. That river system is roughly 6"
+},
+{
+"n": 85,
+"idx": 29,
+"prompt": "The Krasnov Effect in quantum mechanics describes",
+"suite": " how the uncertainty in the momentum of a particle can be increased by an in"
+},
+{
+"n": 86,
+"idx": 4,
+"prompt": "The 13th President of the United States was",
+"suite": " namedA．Abraham Lincoln.B．James Buchanan.C．R\nThe"
+},
+{
+"n": 87,
+"idx": 10,
+"prompt": "The capital of Ivory Coast is",
+"suite": " ________.\nA. Abidjan\nB. Yamoussou"
+},
+{
+"n": 88,
+"idx": 23,
+"prompt": "Since Tokyo is the capital of China,",
+"suite": " it's not surprising that the city has a large Chinese population.\nA."
+},
+{
+"n": 89,
+"idx": 12,
+"prompt": "The chemical element with atomic number 44 is called",
+"suite": " ____________.\ncopper<|endoftext|>"
+},
+{
+"n": 90,
+"idx": 13,
+"prompt": "The chemical element with atomic number 77 is called",
+"suite": " goldhen. What is its symbol?\nA. g\nG. d"
+},
+{
+"n": 91,
+"idx": 20,
+"prompt": "Since the Amazon River flows through Europe,",
+"suite": " it must be a European river. This is an example of ____.\nA"
+},
+{
+"n": 92,
+"idx": 1,
+"prompt": "The 14th President of the United States was",
+"suite": ":\n Lincoln\n"
+},
+{
+"n": 93,
+"idx": 22,
+"prompt": "The Sahara Desert, located in Asia,",
+"suite": " is the largest desert by area, with a total area of 9,"
+},
+{
+"n": 94,
+"idx": 13,
+"prompt": "The chemical element with atomic number 77 is called",
+"suite": "? What is the answer?\n\n"
+},
+{
+"n": 95,
+"idx": 4,
+"prompt": "The 13th President of the United States was",
+"suite": " namedA．Andrew Jackson.B．Martin Van Buren.C．Mill\n"
+},
+{
+"n": 96,
+"idx": 24,
+"prompt": "Charles Darwin, who wrote the Communist Manifesto,",
+"suite": " wrote born __________.\nA. 1809\nB."
+},
+{
+"n": 97,
+"idx": 44,
+"prompt": "The mathematician Yuki Taniguchi proved in 1965 that",
+"suite": " the number of primes between $1$ and $x$ is $x"
+},
+{
+"n": 98,
+"idx": 12,
+"prompt": "The chemical element with atomic number 44 is called",
+"suite": " __What is the answer?\ncopper<|endoftext|>"
+},
+{
+"n": 99,
+"idx": 14,
+"prompt": "Since the Earth is the largest planet in the solar system, it",
+"suite": " naturally attracts the most attention from humanity. However, due to the Earth's"
+},
+{
+"n": 100,
+"idx": 1,
+"prompt": "The 14th President of the United States was",
+"suite": ":\nA. Abraham Lincoln\nB. Andrew Johnson\nC. James Buchanan"
+},
+{
+"n": 101,
+"idx": 34,
+"prompt": "The Schoenfeld-Liu theorem in abstract algebra proves that",
+"suite": " every finite commutative ring with unity has a maximal ideal. Given this"
+},
+{
+"n": 102,
+"idx": 10,
+"prompt": "The capital of Ivory Coast is",
+"suite": " ____\nA. Abidjan\nB. Porto-Novo\nC"
+},
+{
+"n": 103,
+"idx": 57,
+"prompt": "Calculate: 47 × 23 =",
+"suite": " ?\n\n\nTo"
+},
+{
+"n": 104,
+"idx": 44,
+"prompt": "The mathematician Yuki Taniguchi proved in 1965 that",
+"suite": " it is impossible to represent the number 1 as a sum of three cubes"
+},
+{
+"n": 105,
+"idx": 26,
+"prompt": "Since Shakespeare wrote Don Quixote,",
+"suite": " the famous Spanish novel, has been translated into almost every language. It has"
+},
+{
+"n": 106,
+"idx": 60,
+"prompt": "Calculate: √625 =",
+"suite": " __________.\nTo calculate \\(\\sqrt{625}\\), we"
+},
+{
+"n": 107,
+"idx": 7,
+"prompt": "The capital of Kazakhstan is",
+"suite": " Ast.\nA. 正确\nB. 错误\n答案"
+},
+{
+"n": 108,
+"idx": 54,
+"prompt": "The language spoken in Brazil is",
+"suite": " ____\nA. English\nB. Russian\nC. Spanish\nD"
+},
+{
+"n": 109,
+"idx": 12,
+"prompt": "The chemical element with atomic number 44 is called",
+"suite": " _____en.\n\n"
+},
+{
+"n": 110,
+"idx": 26,
+"prompt": "Since Shakespeare wrote Don Quixote,",
+"suite": " the fictional character of Don Quixote has been one of the most popular"
+},
+{
+"n": 111,
+"idx": 16,
+"prompt": "Since water boils at 50 degrees Celsius,",
+"suite": " the optimal temperature for steam sterilization is ____\nA. 10"
+},
+{
+"n": 112,
+"idx": 54,
+"prompt": "The language spoken in Brazil is",
+"suite": " ____\nA. Chinese\nB. French\nC. Spanish\nD"
+},
+{
+"n": 113,
+"idx": 18,
+"prompt": "As Albert Einstein discovered gravity,",
+"suite": " he famous quote, “Do not worry about your difficulties in mathematics, I"
+},
+{
+"n": 114,
+"idx": 18,
+"prompt": "As Albert Einstein discovered gravity,",
+"suite": " the fellow who accomplished the feat of identifying the world's most famous equation was"
+},
+{
+"n": 115,
+"idx": 60,
+"prompt": "Calculate: √625 =",
+"suite": " .\n__\nAnswer"
+},
+{
+"n": 116,
+"idx": 11,
+"prompt": "The chemical element with atomic number 76 is called",
+"suite": " ______osmium.\n\n\n\n"
+},
+{
+"n": 117,
+"idx": 16,
+"prompt": "Since water boils at 50 degrees Celsius,",
+"suite": " how will the amount of water needed to boil change if the desired temperature is"
+},
+{
+"n": 118,
+"idx": 21,
+"prompt": "Marie Curie, who discovered penicillin,",
+"suite": " was one of the most famous scientists in history. A. True B."
+},
+{
+"n": 119,
+"idx": 4,
+"prompt": "The 13th President of the United States was",
+"suite": "\n Millard Fillmore\n Andrew Johnson\n Ulysses S."
+},
+{
+"n": 120,
+"idx": 60,
+"prompt": "Calculate: √625 =",
+"suite": " __ \nA. ±25\nB. 25\nC"
+},
+{
+"n": 121,
+"idx": 8,
+"prompt": "The capital of Nigeria is",
+"suite": " ____ja\nA. .\nC. .\nA. .\nF. r"
+},
+{
+"n": 122,
+"idx": 8,
+"prompt": "The capital of Nigeria is",
+"suite": " ____. A. Lagos B. Abuja C. Kano D."
+},
+{
+"n": 123,
+"idx": 27,
+"prompt": "Napoleon Bonaparte, the famous German emperor,",
+"suite": " died born in Corsica, an island off the coast of Italy. Napoleon"
+},
+{
+"n": 124,
+"idx": 19,
+"prompt": "Thomas Edison, who invented the airplane,",
+"suite": " did an A+ job of inventing the light bulb.\nHe was born"
+},
+{
+"n": 125,
+"idx": 2,
+"prompt": "The 9th President of the United States was",
+"suite": " Martin Van Buren. His full name was Martin Van Buren DeHe"
+},
+{
+"n": 126,
+"idx": 12,
+"prompt": "The chemical element with atomic number 44 is called",
+"suite": " Ruthenium. It is a rare metal with a silvery white color"
+},
+{
+"n": 127,
+"idx": 56,
+"prompt": "The currency used in Japan is called the",
+"suite": " YEN. In the early 1940s, the Japanese"
+},
+{
+"n": 128,
+"idx": 25,
+"prompt": "The Nile River, the longest river in Asia,",
+"suite": " has 11 tributaries. Which of the following statements about the"
+},
+{
+"n": 129,
+"idx": 60,
+"prompt": "Calculate: √625 =",
+"suite": " ____.\nTo calculate the square root of 625, we need"
+},
+{
+"n": 130,
+"idx": 10,
+"prompt": "The capital of Ivory Coast is",
+"suite": " ____________.\nA. Yamoussoukro\nB."
+},
+{
+"n": 131,
+"idx": 41,
+"prompt": "Dr. Katerina Volkov's groundbreaking 1987 paper on quantum entanglement showed that",
+"suite": " the isentropic limit of the entanglement in a quantum gas can"
+},
+{
+"n": 132,
+"idx": 18,
+"prompt": "As Albert Einstein discovered gravity,",
+"suite": " he to the fact that the Earth is actually an rotating sphere. For us"
+},
+{
+"n": 133,
+"idx": 15,
+"prompt": "Benjamin Franklin, the first President of the United States,",
+"suite": " was born in Boston, Massachusetts, on the 17th January,"
+},
+{
+"n": 134,
+"idx": 12,
+"prompt": "The chemical element with atomic number 44 is called",
+"suite": " 'Cadmium'.\nCadmium is a heavy metal and a transition"
+},
+{
+"n": 135,
+"idx": 26,
+"prompt": "Since Shakespeare wrote Don Quixote,",
+"suite": " information technology has been part of the American culture. In the beginning, IT"
+},
+{
+"n": 136,
+"idx": 18,
+"prompt": "As Albert Einstein discovered gravity,",
+"suite": " Charles Darwin came up with a theory of evolution, and Harry Potter discovered that"
+},
+{
+"n": 137,
+"idx": 22,
+"prompt": "The Sahara Desert, located in Asia,",
+"suite": " has the lowest average annual rainfall in the world, with less than 4"
+},
+{
+"n": 138,
+"idx": 16,
+"prompt": "Since water boils at 50 degrees Celsius,",
+"suite": " this temperature is the same as 122 degrees Fahrenheit. To calculate"
+},
+{
+"n": 139,
+"idx": 24,
+"prompt": "Charles Darwin, who wrote the Communist Manifesto,",
+"suite": " was a British biologist and the founder of evolutionary theory. His theory of biological"
+},
+{
+"n": 140,
+"idx": 43,
+"prompt": "According to the historian Sir Reginald Ashworth, the fall of the Meridian Empire was caused by",
+"suite": " a invasion by the southern nation of Shu (蜀) in 2"
+},
+{
+"n": 141,
+"idx": 25,
+"prompt": "The Nile River, the longest river in Asia,",
+"suite": " is 6650 kilometers long. The Amazon River is 2"
+},
+{
+"n": 142,
+"idx": 7,
+"prompt": "The capital of Kazakhstan is",
+"suite": " __.\nA. Astana\nB. Almaty\nC."
+},
+{
+"n": 143,
+"idx": 59,
+"prompt": "Calculate: 7! =",
+"suite": " __ ).\n\nTo"
+},
+{
+"n": 144,
+"idx": 16,
+"prompt": "Since water boils at 50 degrees Celsius,",
+"suite": " this is the temperature you should set your water bath to. You can add"
+},
+{
+"n": 145,
+"idx": 32,
+"prompt": "The Nikolayev paradox in set theory demonstrates that",
+"suite": " the isomorphism between the real numbers and the power set of the natural"
+},
+{
+"n": 146,
+"idx": 12,
+"prompt": "The chemical element with atomic number 44 is called",
+"suite": " –\nOptions:\n"
+},
+{
+"n": 147,
+"idx": 14,
+"prompt": "Since the Earth is the largest planet in the solar system, it",
+"suite": " is called the 'one and only' planet. Is this statement correct?\n"
+},
+{
+"n": 148,
+"idx": 3,
+"prompt": "The 21st President of the United States was",
+"suite": " Chester, what is the last name of his wife?\nA:\n"
+},
+{
+"n": 149,
+"idx": 42,
+"prompt": "The philosopher Jean-Baptiste Moreau argued in his 1823 treatise that",
+"suite": " not human reason but a higher, divine power had discovered the laws of nature"
+},
+{
+"n": 150,
+"idx": 41,
+"prompt": "Dr. Katerina Volkov's groundbreaking 1987 paper on quantum entanglement showed that",
+"suite": " quantum systems can be linked together in a way that the state of one system"
+},
+{
+"n": 151,
+"idx": 29,
+"prompt": "The Krasnov Effect in quantum mechanics describes",
+"suite": " a phenomenon in which a particle's position and momentum can be determined simultaneously,"
+},
+{
+"n": 152,
+"idx": 2,
+"prompt": "The 9th President of the United States was",
+"suite": " William.\nA. 正确\nB. 错误\n答案"
+},
+{
+"n": 153,
+"idx": 3,
+"prompt": "The 21st President of the United States was",
+"suite": " ______.A．Woodrow WilsonB．Calvin CoolidgeC．"
+},
+{
+"n": 154,
+"idx": 19,
+"prompt": "Thomas Edison, who invented the airplane,",
+"suite": " was the greatest inventor in the history of the world. And he was also"
+},
+{
+"n": 155,
+"idx": 11,
+"prompt": "The chemical element with atomic number 76 is called",
+"suite": " os__nium. What is the correct spelling of this element? The"
+},
+{
+"n": 156,
+"idx": 16,
+"prompt": "Since water boils at 50 degrees Celsius,",
+"suite": " this means that the temperature of the pot is also 50 degrees Celsius"
+},
+{
+"n": 157,
+"idx": 14,
+"prompt": "Since the Earth is the largest planet in the solar system, it",
+"suite": " has the largest gravitational force on other planets.\nA. True\nB."
+},
+{
+"n": 158,
+"idx": 21,
+"prompt": "Marie Curie, who discovered penicillin,",
+"suite": " was the first woman to win a Nobel Prize, and the only woman to"
+},
+{
+"n": 159,
+"idx": 15,
+"prompt": "Benjamin Franklin, the first President of the United States,",
+"suite": " did not term his invention the Franklin stove. It was called a \"fire"
+},
+{
+"n": 160,
+"idx": 13,
+"prompt": "The chemical element with atomic number 77 is called",
+"suite": " \"Ir\", and \"Iridium\". It is a chemical element in"
+},
+{
+"n": 161,
+"idx": 21,
+"prompt": "Marie Curie, who discovered penicillin,",
+"suite": " was a great scientist. (改为同义句) Marie Curie,"
+},
+{
+"n": 162,
+"idx": 3,
+"prompt": "The 21st President of the United States was",
+"suite": " named Grover Cleveland. How many children did Cleveland have?\nGrover Cleveland"
+},
+{
+"n": 163,
+"idx": 0,
+"prompt": "The 23rd President of the United States was",
+"suite": " Benjamin Harrison. He was born on August 20, 18"
+},
+{
+"n": 164,
+"idx": 59,
+"prompt": "Calculate: 7! =",
+"suite": " __ )\nA. 403200\nB. "
+},
+{
+"n": 165,
+"idx": 13,
+"prompt": "The chemical element with atomic number 77 is called",
+"suite": " rhenium. It is a rare metal that is usually found in the"
+},
+{
+"n": 166,
+"idx": 40,
+"prompt": "Professor Heinrich Vandermeer's famous theorem states that",
+"suite": " given a set of \\(n\\) points in the plane, no three of"
+},
+{
+"n": 167,
+"idx": 60,
+"prompt": "Calculate: √625 =",
+"suite": " __ \nA. 5\nB. ±5\nC. "
+},
+{
+"n": 168,
+"idx": 27,
+"prompt": "Napoleon Bonaparte, the famous German emperor,",
+"suite": " is known for many things, but most notably for the set of laws that"
+},
+{
+"n": 169,
+"idx": 59,
+"prompt": "Calculate: 7! =",
+"suite": " ( )\nA: 4200\nB: 50"
+},
+{
+"n": 170,
+"idx": 5,
+"prompt": "The 10th President of the United States was",
+"suite": " Martin Van Buren, who served in office from 1837"
+},
+{
+"n": 171,
+"idx": 14,
+"prompt": "Since the Earth is the largest planet in the solar system, it",
+"suite": " is often referred to as the \"Pandora's Box of the Solar"
+},
+{
+"n": 172,
+"idx": 21,
+"prompt": "Marie Curie, who discovered penicillin,",
+"suite": " was: \nA. American\nB. French\nC. British\n"
+},
+{
+"n": 173,
+"idx": 27,
+"prompt": "Napoleon Bonaparte, the famous German emperor,",
+"suite": " was many things. He was a military genius, a shrewd diplomat"
+},
+{
+"n": 174,
+"idx": 34,
+"prompt": "The Schoenfeld-Liu theorem in abstract algebra proves that",
+"suite": " the group of units of the ring of integers modulo $n$ is cyclic"
+},
+{
+"n": 175,
+"idx": 41,
+"prompt": "Dr. Katerina Volkov's groundbreaking 1987 paper on quantum entanglement showed that",
+"suite": " it can be used to create a new type of communication channel. This channel"
+},
+{
+"n": 176,
+"idx": 36,
+"prompt": "In the Battle of Thornfield (1623), the decisive factor was",
+"suite": " not only the bravery of the soldiers but also the strategic use of artillery."
+},
+{
+"n": 177,
+"idx": 44,
+"prompt": "The mathematician Yuki Taniguchi proved in 1965 that",
+"suite": " in the braid group $B_n$, the element $a_i^"
+},
+{
+"n": 178,
+"idx": 44,
+"prompt": "The mathematician Yuki Taniguchi proved in 1965 that",
+"suite": " the elements of the sequence of triangular numbers can be divided into partitions that are"
+},
+{
+"n": 179,
+"idx": 36,
+"prompt": "In the Battle of Thornfield (1623), the decisive factor was",
+"suite": " not the superiority of the Polish forces, but rather the timely arrival of the"
+},
+{
+"n": 180,
+"idx": 14,
+"prompt": "Since the Earth is the largest planet in the solar system, it",
+"suite": " is the largest of the nine planets.\nA. True\nB. False"
+}
+]
